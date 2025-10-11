@@ -1,8 +1,9 @@
 # depslib dependency file v1.0
-1760175552 source:d:\snakegame\game\main.cpp
+1760193363 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 	"player.h"
+	"obstacle.h"
 
 1759730591 d:\sdl2-devel-2.32.10-mingw\sdl2-2.32.10\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -447,4 +448,11 @@
 	"close_code.h"
 
 1760175653 d:\snakegame\game\player.h
+
+1760193345 d:\snakegame\game\obstacle.h
+	<SDL2/SDL.h>
+	<vector>
+	<cstdlib>
+	<ctime>
+	<algorithm>
 
