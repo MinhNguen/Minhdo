@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1760173120 source:d:\snakegame\game\main.cpp
+1760174031 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 
