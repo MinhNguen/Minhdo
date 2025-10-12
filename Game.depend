@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1760193363 source:d:\snakegame\game\main.cpp
+1760282567 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 	"player.h"
@@ -449,7 +449,7 @@
 
 1760175653 d:\snakegame\game\player.h
 
-1760193345 d:\snakegame\game\obstacle.h
+1760282581 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>

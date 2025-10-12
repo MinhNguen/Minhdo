@@ -35,20 +35,20 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
     bool gameOver = false;
+    bool gamePaused = false;  // Trạng thái tạm dừng khi va chạm
     SDL_Event event;
 
-    // Lưu trạng thái phím bấm liên tục
     const Uint8* keyState = SDL_GetKeyboardState(NULL);
 
     std::cout << "🎮 Game Started!" << std::endl;
     std::cout << "Controls:" << std::endl;
     std::cout << "  - SPACE/UP: Jump" << std::endl;
+    std::cout << "  - DOWN: Duck (to avoid flying obstacles)" << std::endl;
     std::cout << "  - LEFT/RIGHT: Move" << std::endl;
     std::cout << "  - ESC: Quit" << std::endl;
     std::cout << "  - R: Restart (when game over)" << std::endl;
 
     while (running) {
-        // Xử lý sự kiện
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
                 running = false;
@@ -57,18 +57,17 @@ int main(int argc, char* argv[]) {
                 switch (event.key.keysym.sym) {
                 case SDLK_SPACE:
                 case SDLK_UP:
-                    if (!gameOver) {
-                        // Chỉ nhảy khi đang đứng trên mặt đất
+                    if (!gameOver && !gamePaused) {
                         if (player.isOnGround) {
-                            player.vy = -12.0f;  // Lực nhảy
+                            player.vy = -12.0f;
                             player.isOnGround = false;
                         }
                     }
                     break;
                 case SDLK_r:
-                    // Restart game
                     if (gameOver) {
                         gameOver = false;
+                        gamePaused = false;
                         player.x = 50;
                         player.y = player.groundY;
                         player.vy = 0;
@@ -84,9 +83,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (!gameOver) {
-            // Di chuyển trái phải (kiểm tra phím giữ liên tục)
+        if (!gameOver && !gamePaused) {
             keyState = SDL_GetKeyboardState(NULL);
+
+            // Di chuyển trái phải
             if (keyState[SDL_SCANCODE_LEFT] || keyState[SDL_SCANCODE_A]) {
                 player.x -= player.vx;
             }
@@ -94,12 +94,21 @@ int main(int argc, char* argv[]) {
                 player.x += player.vx;
             }
 
-            // Áp dụng trọng lực
-            if (!player.isOnGround) {
-                player.vy += player.gravity;  // Tăng vận tốc rơi
+            // Cúi xuống (giảm chiều cao để tránh chim bay)
+            if (keyState[SDL_SCANCODE_DOWN] || keyState[SDL_SCANCODE_S]) {
+                if (player.isOnGround) {
+                    player.height = 20;  // Giảm chiều cao xuống một nửa
+                }
+            } else {
+                player.height = 40;  // Chiều cao bình thường
             }
 
-            player.y += player.vy;  // Cập nhật vị trí Y
+            // Áp dụng trọng lực
+            if (!player.isOnGround) {
+                player.vy += player.gravity;
+            }
+
+            player.y += player.vy;
 
             // Kiểm tra chạm đất
             if (player.y >= player.groundY) {
@@ -110,30 +119,29 @@ int main(int argc, char* argv[]) {
                 player.isOnGround = false;
             }
 
-            // Giới hạn không đi ra ngoài cửa sổ (trái phải)
+            // Giới hạn không đi ra ngoài cửa sổ
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > SCREEN_WIDTH) player.x = SCREEN_WIDTH - player.width;
-
-            // Giới hạn không bay quá cao
             if (player.y < 0) player.y = 0;
 
             // Cập nhật chướng ngại vật
             obstacleManager.update();
 
-            // Kiểm tra va chạm
+            // Kiểm tra va chạm - TRÒ CHƠI DỪNG LẠI
             if (obstacleManager.checkCollisionWithPlayer(
                 player.x, player.y, player.width, player.height)) {
                 gameOver = true;
+                gamePaused = true;  // Dừng game lại hoàn toàn
                 std::cout << "💀 GAME OVER! Press R to restart" << std::endl;
             }
         }
 
-        // Vẽ lại khung hình
-        SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255); // Nền màu trời
+        // VẼ KHUNG HÌNH (vẽ ngay cả khi pause để thấy va chạm)
+        SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
         SDL_RenderClear(renderer);
 
         // Vẽ mặt sàn
-        SDL_SetRenderDrawColor(renderer, 34, 139, 34, 255); // Màu xanh lá
+        SDL_SetRenderDrawColor(renderer, 34, 139, 34, 255);
         SDL_Rect ground = { 0, player.groundY + (int)player.height, SCREEN_WIDTH,
                            SCREEN_HEIGHT - (player.groundY + (int)player.height) };
         SDL_RenderFillRect(renderer, &ground);
@@ -143,14 +151,18 @@ int main(int argc, char* argv[]) {
 
         // Vẽ nhân vật
         if (gameOver) {
-            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Màu xám khi chết
+            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); // Xám khi chết
         } else {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Màu đỏ
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Đỏ
         }
         SDL_Rect playerRect = { player.x, player.y, (int)player.width, (int)player.height };
         SDL_RenderFillRect(renderer, &playerRect);
 
-        // Vẽ text GAME OVER (đơn giản bằng hình chữ nhật)
+        // Viền player để dễ thấy
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &playerRect);
+
+        // Vẽ GAME OVER screen
         if (gameOver) {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
             SDL_Rect gameOverBg = { SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/2 - 30, 200, 60 };
