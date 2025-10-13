@@ -142,8 +142,8 @@ int main(int argc, char* argv[]) {
 
         // Vẽ mặt sàn
         SDL_SetRenderDrawColor(renderer, 34, 139, 34, 255);
-        SDL_Rect ground = { 0, player.groundY + (int)player.height, SCREEN_WIDTH,
-                           SCREEN_HEIGHT - (player.groundY + (int)player.height) };
+        SDL_Rect ground = { 0, player.groundY, SCREEN_WIDTH,
+                           SCREEN_HEIGHT - (player.groundY) };
         SDL_RenderFillRect(renderer, &ground);
 
         // Vẽ chướng ngại vật
@@ -155,7 +155,8 @@ int main(int argc, char* argv[]) {
         } else {
             SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Đỏ
         }
-        SDL_Rect playerRect = { player.x, player.y, (int)player.width, (int)player.height };
+        SDL_Rect playerRect = { player.x, player.y - (int)player.height, (int)player.width, (int)player.height };
+
         SDL_RenderFillRect(renderer, &playerRect);
 
         // Viền player để dễ thấy

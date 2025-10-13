@@ -28,10 +28,10 @@ public:
         type = obsType;
 
         if (type == GROUND_OBSTACLE) {
-            // Chướng ngại vật đất
-            width = 20 + (rand() % 30);   // 20-50
-            height = 30 + (rand() % 40);  // 30-70
-            y = groundY - height;
+            // Chướng ngại vật đất - THẤP HƠN, BẮT BUỘC PHẢI NHẢY
+            width = 20 + (rand() % 25);   // 20-45
+            height = 50 + (rand() % 30);  // 50-80 (cao hơn player)
+            y = groundY;
         } else {
             // Chướng ngại vật bay
             width = 35 + (rand() % 25);   // 35-60 (rộng hơn)
@@ -40,11 +40,11 @@ public:
             // 3 độ cao khác nhau
             int heightLevel = rand() % 3;
             if (heightLevel == 0) {
-                y = groundY - 80;  // Thấp (có thể nhảy qua)
+                y = groundY - 50;  // Thấp (có thể nhảy qua)
             } else if (heightLevel == 1) {
-                y = groundY - 130; // Trung bình (phải nhảy cao)
+                y = groundY - 100; // Trung bình (phải nhảy cao)
             } else {
-                y = groundY - 180; // Cao (phải cúi xuống)
+                y = groundY - 120; // Cao (phải cúi xuống)
             }
         }
     }
@@ -62,7 +62,7 @@ public:
             if (type == GROUND_OBSTACLE) {
                 // Vẽ xương rồng (màu xanh đậm)
                 SDL_SetRenderDrawColor(renderer, 34, 139, 34, 255);
-                SDL_Rect rect = { x, y, width, height };
+                SDL_Rect rect = { x, y - height, width, height };
                 SDL_RenderFillRect(renderer, &rect);
 
                 // Viền đen
@@ -71,7 +71,7 @@ public:
             } else {
                 // Vẽ chim (màu đỏ cam)
                 SDL_SetRenderDrawColor(renderer, 255, 100, 50, 255);
-                SDL_Rect rect = { x, y, width, height };
+                SDL_Rect rect = { x, y - height, width, height };
                 SDL_RenderFillRect(renderer, &rect);
 
                 // Viền đen
