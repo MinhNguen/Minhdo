@@ -4,6 +4,7 @@
 #include <string>
 #include "player.h"
 #include "obstacle.h"
+#include "score.h"
 
 enum class GameState { MENU, PLAYING, GAME_OVER };
 
@@ -31,6 +32,18 @@ void renderCenteredText(SDL_Renderer* renderer, TTF_Font* font, const std::strin
     }
 }
 
+void renderLeftText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text,
+                    SDL_Color color, int x, int y) {
+    SDL_Texture* tex = renderText(renderer, font, text, color);
+    if (tex) {
+        int w, h;
+        SDL_QueryTexture(tex, NULL, NULL, &w, &h);
+        SDL_Rect dst = { x, y, w, h };
+        SDL_RenderCopy(renderer, tex, NULL, &dst);
+        SDL_DestroyTexture(tex);
+    }
+}
+
 // ===================== Main =====================
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -46,15 +59,17 @@ int main(int argc, char* argv[]) {
     const int SCREEN_WIDTH = 800;
     const int SCREEN_HEIGHT = 480;
 
-    SDL_Window* window = SDL_CreateWindow("Dino Game",
+    SDL_Window* window = SDL_CreateWindow("Dino Game - With Score System",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     // Load font
     TTF_Font* fontBig = TTF_OpenFont("NotoSans-Regular.ttf", 48);
+    TTF_Font* fontMedium = TTF_OpenFont("NotoSans-Regular.ttf", 32);
     TTF_Font* fontSmall = TTF_OpenFont("NotoSans-Regular.ttf", 24);
-    if (!fontBig || !fontSmall) {
+    TTF_Font* fontTiny = TTF_OpenFont("NotoSans-Regular.ttf", 18);
+    if (!fontBig || !fontSmall || !fontMedium || !fontTiny) {
         std::cout << "Failed to load font! Error: " << TTF_GetError() << std::endl;
         SDL_Quit();
         return 1;
@@ -63,6 +78,7 @@ int main(int argc, char* argv[]) {
     // Entities
     Player player;
     ObstacleManager obstacles(player.groundY, 6, SCREEN_WIDTH);
+    ScoreManager scoreManager(player.groundY, 6, SCREEN_WIDTH);
 
     GameState state = GameState::MENU;
     bool running = true;
@@ -85,6 +101,7 @@ int main(int argc, char* argv[]) {
                     player.vy = 0;
                     player.isOnGround = true;
                     obstacles.clear();
+                    scoreManager.reset();
                     state = GameState::PLAYING;
                 } else if (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w &&
                            my >= quitBtn.y && my <= quitBtn.y + quitBtn.h) {
@@ -100,6 +117,7 @@ int main(int argc, char* argv[]) {
             } else if (state == GameState::GAME_OVER && e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_r) {
                     obstacles.clear();
+                    scoreManager.reset();
                     player.x = 50;
                     player.y = player.groundY;
                     player.vy = 0;
@@ -126,6 +144,8 @@ int main(int argc, char* argv[]) {
             }
 
             obstacles.update();
+            scoreManager.update(player.x, player.y, player.width, player.height);
+
             if (obstacles.checkCollisionWithPlayer(player.x, player.y, player.width, player.height)) {
                 gameOver = true;
                 state = GameState::GAME_OVER;
@@ -139,8 +159,13 @@ int main(int argc, char* argv[]) {
         if (state == GameState::MENU) {
             SDL_Color white = { 255, 255, 255, 255 };
             SDL_Color black = { 0, 0, 0, 255 };
+            SDL_Color gold = { 255, 215, 0, 255 };
 
-            renderCenteredText(renderer, fontBig, "DINO GAME", black, 100, SCREEN_WIDTH);
+            renderCenteredText(renderer, fontBig, "DINO GAME", black, 80, SCREEN_WIDTH);
+
+            // Hiển thị High Score
+            std::string highScoreText = "HIGH SCORE: " + std::to_string(scoreManager.getHighScore());
+            renderCenteredText(renderer, fontSmall, highScoreText, gold, 150, SCREEN_WIDTH);
 
             // Play button
             int mx, my; SDL_GetMouseState(&mx, &my);
@@ -163,6 +188,9 @@ int main(int argc, char* argv[]) {
 
             renderCenteredText(renderer, fontSmall,
                 "CONTROLS: SPACE/UP=JUMP, ESC=MENU", black, SCREEN_HEIGHT - 60, SCREEN_WIDTH);
+
+            renderCenteredText(renderer, fontTiny,
+                "Collect coins for bonus points!", black, SCREEN_HEIGHT - 30, SCREEN_WIDTH);
         }
         else if (state == GameState::PLAYING || state == GameState::GAME_OVER) {
             // Ground
@@ -170,17 +198,53 @@ int main(int argc, char* argv[]) {
             SDL_Rect ground = { 0, player.groundY, SCREEN_WIDTH, SCREEN_HEIGHT - player.groundY };
             SDL_RenderFillRect(renderer, &ground);
 
-            // Obstacles & Player
+            // Obstacles, Coins & Player
             obstacles.render(renderer);
+            scoreManager.render(renderer);
+
             SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             SDL_Rect rect = { player.x, player.y - player.height, player.width, player.height };
             SDL_RenderFillRect(renderer, &rect);
 
+            // Hiển thị điểm số trong game
+            SDL_Color white = { 255, 255, 255, 255 };
+            SDL_Color yellow = { 255, 255, 0, 255 };
+            SDL_Color black = { 0, 0, 0, 255 };
+
+            // Tổng điểm (góc trên bên trái)
+            std::string scoreText = "SCORE: " + std::to_string(scoreManager.getCurrentScore());
+            renderLeftText(renderer, fontMedium, scoreText, black, 10, 10);
+
+            // Chi tiết điểm (góc trên bên phải)
+            std::string distanceText = "Distance: " + std::to_string(scoreManager.getDistanceScore());
+            std::string coinText = "Coins: " + std::to_string(scoreManager.getCoinScore()) +
+                                   " (" + std::to_string(scoreManager.getTotalCoins()) + ")";
+
+            renderLeftText(renderer, fontTiny, distanceText, black, SCREEN_WIDTH - 150, 10);
+            renderLeftText(renderer, fontTiny, coinText, yellow, SCREEN_WIDTH - 150, 35);
+
             if (state == GameState::GAME_OVER) {
-                SDL_Color white = { 255, 255, 255, 255 };
-                renderCenteredText(renderer, fontBig, "GAME OVER", white, 180, SCREEN_WIDTH);
+                // Màn hình game over với thông tin chi tiết
+                renderCenteredText(renderer, fontBig, "GAME OVER", white, 120, SCREEN_WIDTH);
+
+                std::string finalScore = "FINAL SCORE: " + std::to_string(scoreManager.getCurrentScore());
+                renderCenteredText(renderer, fontMedium, finalScore, yellow, 190, SCREEN_WIDTH);
+
+                std::string breakdown = "Distance: " + std::to_string(scoreManager.getDistanceScore()) +
+                                       " | Coins: " + std::to_string(scoreManager.getCoinScore());
+                renderCenteredText(renderer, fontSmall, breakdown, white, 240, SCREEN_WIDTH);
+
+                std::string coinsCollected = "Coins Collected: " + std::to_string(scoreManager.getTotalCoins());
+                renderCenteredText(renderer, fontSmall, coinsCollected, yellow, 270, SCREEN_WIDTH);
+
+                if (scoreManager.getCurrentScore() == scoreManager.getHighScore() &&
+                    scoreManager.getCurrentScore() > 0) {
+                    renderCenteredText(renderer, fontSmall, "NEW HIGH SCORE!",
+                                     SDL_Color{255, 215, 0, 255}, 300, SCREEN_WIDTH);
+                }
+
                 renderCenteredText(renderer, fontSmall, "PRESS R TO RESTART OR M FOR MENU",
-                                   white, 260, SCREEN_WIDTH);
+                                   white, 340, SCREEN_WIDTH);
             }
         }
 
@@ -190,7 +254,9 @@ int main(int argc, char* argv[]) {
 
     // Cleanup
     TTF_CloseFont(fontBig);
+    TTF_CloseFont(fontMedium);
     TTF_CloseFont(fontSmall);
+    TTF_CloseFont(fontTiny);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
