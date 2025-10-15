@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <iostream>
 #include <string>
 #include "player.h"
@@ -74,6 +75,7 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return 1;
     }
+    SDL_Texture* dino = IMG_LoadTexture(renderer, "image/dino.png");
 
     // Entities
     Player player;
@@ -204,7 +206,7 @@ int main(int argc, char* argv[]) {
 
             SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             SDL_Rect rect = { player.x, player.y - player.height, player.width, player.height };
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderCopy(renderer, dino, nullptr,  &rect);
 
             // Hiển thị điểm số trong game
             SDL_Color white = { 255, 255, 255, 255 };
