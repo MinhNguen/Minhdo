@@ -453,12 +453,13 @@
 
 1760336595 d:\snakegame\game\player.h
 
-1760337125 d:\snakegame\game\obstacle.h
+1760517866 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>
 	<ctime>
 	<algorithm>
+	<cmath>
 
 1760340018 d:\sdl2_ttf-2.24.0\x86_64-w64-mingw32\include\sdl2\sdl_ttf.h
 	"SDL.h"
