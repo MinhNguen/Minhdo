@@ -167,10 +167,10 @@ public:
     bool checkCollision(int px, int py, int pwidth, int pheight) {
         if (!active) return false;
 
-        return (px < x + width &&
-                px + pwidth > x &&
-                py < y &&
-                py + pheight > y - height);
+        return !(px > x + width ||
+                px + pwidth < x ||
+                py > y + height ||
+                py + pheight < y);
     }
 };
 

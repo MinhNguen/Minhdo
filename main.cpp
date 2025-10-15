@@ -104,6 +104,7 @@ int main(int argc, char* argv[]) {
                     player.isOnGround = true;
                     obstacles.clear();
                     scoreManager.reset();
+                    gameOver = false;
                     state = GameState::PLAYING;
                 } else if (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w &&
                            my >= quitBtn.y && my <= quitBtn.y + quitBtn.h) {
@@ -113,6 +114,14 @@ int main(int argc, char* argv[]) {
                 if ((e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_UP) && player.isOnGround) {
                     player.vy = -12.0f;
                     player.isOnGround = false;
+                } else if (e.key.keysym.sym == SDLK_RIGHT) {
+                    player.x += player.vx;
+                    obstacles.update();
+                    scoreManager.update(player.x, player.y, player.width, player.height);
+                } else if (e.key.keysym.sym == SDLK_LEFT) {
+                    player.x -= player.vx;
+                    obstacles.update();
+                    scoreManager.update(player.x, player.y, player.width, player.height);
                 } else if (e.key.keysym.sym == SDLK_ESCAPE) {
                     state = GameState::MENU;
                 }
@@ -134,9 +143,6 @@ int main(int argc, char* argv[]) {
 
         // Update
         if (state == GameState::PLAYING && !gameOver) {
-            const Uint8* keys = SDL_GetKeyboardState(NULL);
-            if (keys[SDL_SCANCODE_LEFT]) player.x -= player.vx;
-            if (keys[SDL_SCANCODE_RIGHT]) player.x += player.vx;
             if (!player.isOnGround) player.vy += player.gravity;
             player.y += player.vy;
             if (player.y >= player.groundY) {
@@ -203,8 +209,6 @@ int main(int argc, char* argv[]) {
             // Obstacles, Coins & Player
             obstacles.render(renderer);
             scoreManager.render(renderer);
-
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             SDL_Rect rect = { player.x, player.y - player.height, player.width, player.height };
             SDL_RenderCopy(renderer, dino, nullptr,  &rect);
 
