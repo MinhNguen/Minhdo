@@ -112,17 +112,6 @@ public:
                 SDL_SetRenderDrawColor(renderer, 255, 100, 50, 255);
                 SDL_Rect rect = { x, y - height, width, height };
                 SDL_RenderFillRect(renderer, &rect);
-
-                // Viền đen
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                SDL_RenderDrawRect(renderer, &rect);
-
-                // Vẽ cánh đơn giản
-                SDL_SetRenderDrawColor(renderer, 200, 80, 40, 255);
-                SDL_Rect wing1 = { x + 5, y - 5, 10, 5 };
-                SDL_Rect wing2 = { x + width - 15, y - 5, 10, 5 };
-                SDL_RenderFillRect(renderer, &wing1);
-                SDL_RenderFillRect(renderer, &wing2);
             } else { // METEOR
                 // Vẽ đuôi lửa phía sau thiên thạch
                 if (trailTimer % 2 == 0) {
@@ -166,11 +155,10 @@ public:
 
     bool checkCollision(int px, int py, int pwidth, int pheight) {
         if (!active) return false;
-
-        return !(px > x + width ||
-                px + pwidth < x ||
-                py > y + height ||
-                py + pheight < y);
+        return (px < x + width &&
+                px + pwidth > x &&
+                py < y + height &&
+                py + pheight > y);
     }
 };
 
