@@ -155,11 +155,12 @@ public:
 
     bool checkCollision(int px, int py, int pwidth, int pheight) {
         if (!active) return false;
-        return (px < x + width &&
-                px + pwidth > x &&
-                py < y + height &&
-                py + pheight > y);
+        SDL_Rect a{ px,        py - pheight, pwidth,  pheight }; // player
+        SDL_Rect b{ x,         y  - height,  width,   height  }; // obstacle
+
+        return SDL_HasIntersection(&a, &b) == SDL_TRUE;
     }
+
 };
 
 class ObstacleManager {

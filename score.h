@@ -7,12 +7,14 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
+#include "player.h" // Include player.h to access the Player struct
 
 // Loại điểm thưởng
 enum CoinType {
     NORMAL_COIN,   // Xu vàng thường (+10 điểm)
     SILVER_COIN,   // Xu bạc (+5 điểm)
-    GOLD_COIN      // Xu vàng đặc biệt (+20 điểm)
+    GOLD_COIN,     // Xu vàng đặc biệt (+20 điểm)
+    XP_COIN        // Xu kinh nghiệm (+25 XP)
 };
 
 class Coin {
@@ -24,6 +26,7 @@ public:
     bool collected;
     CoinType type;
     int value;
+    int xpValue; // XP awarded by this coin
 
     // Hiệu ứng animation
     float animFrame;
@@ -38,6 +41,7 @@ public:
 
         width = 20;
         height = 20;
+        xpValue = 0; // Default to 0 XP
 
         animFrame = 0;
         animSpeed = 0.2f;
@@ -51,6 +55,12 @@ public:
             width = 25;
             height = 25;
             y = groundY - 130; // Cao nhất - khó lấy nhất
+        } else if (type == XP_COIN) {
+            value = 0; // No score value
+            xpValue = 25;
+            width = 22;
+            height = 22;
+            y = groundY - 90;
         } else { // NORMAL_COIN
             value = 10;
             // Random độ cao
@@ -86,7 +96,11 @@ public:
             } else if (type == GOLD_COIN) {
                 // Xu vàng đặc biệt (vàng óng ánh)
                 SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
-            } else {
+            } else if (type == XP_COIN) {
+                // Xu XP (màu tím)
+                SDL_SetRenderDrawColor(renderer, 128, 0, 128, 255);
+            }
+            else {
                 // Xu thường (vàng)
                 SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
             }
@@ -109,10 +123,10 @@ public:
     bool checkCollision(int px, int py, int pwidth, int pheight) {
         if (!active || collected) return false;
 
-        return (px < x + width &&
-                px + pwidth > x &&
-                py < y + height &&
-                py + pheight > y);
+        SDL_Rect a{ px,        py - pheight, pwidth,  pheight }; // player
+        SDL_Rect b{ x,         y  - height,  width,   height  }; // obstacle
+
+        return SDL_HasIntersection(&a, &b) == SDL_TRUE;
     }
 };
 
@@ -149,19 +163,20 @@ public:
         srand(time(NULL));
     }
 
-    void update(int playerX, int playerY, int playerWidth, int playerHeight) {
+    void update(Player& player) { // Pass player by reference
         // Cập nhật xu
         for (auto& coin : coins) {
             coin.update();
 
             // Kiểm tra va chạm với player
-            if (coin.checkCollision(playerX, playerY, playerWidth, playerHeight)) {
+            if (coin.checkCollision(player.x, player.y, player.width, player.height)) {
                 if (!coin.collected) {
                     coin.collected = true;
                     coin.active = false;
-                    coinScore += coin.value;
-                    currentScore += coin.value;
-                    totalCoinsCollected++;
+                    coinScore += coin.value;        // Cộng điểm màn chơi hiện tại
+                    currentScore += coin.value;     // Cộng điểm màn chơi hiện tại
+                    player.totalCoins++;            // Tăng tổng số xu của người chơi
+                    player.addXp(coin.xpValue);
                 }
             }
         }
@@ -196,16 +211,18 @@ public:
     }
 
     void spawnCoin() {
-        // 50% xu thường, 30% xu bạc, 20% xu vàng
+        // 45% normal, 25% silver, 15% gold, 15% XP
         int randVal = rand() % 100;
         CoinType type;
 
-        if (randVal < 50) {
+        if (randVal < 45) {
             type = NORMAL_COIN;
-        } else if (randVal < 80) {
+        } else if (randVal < 70) {
             type = SILVER_COIN;
-        } else {
+        } else if (randVal < 85) {
             type = GOLD_COIN;
+        } else {
+            type = XP_COIN;
         }
 
         coins.push_back(Coin(screenWidth, groundY, speed, type));
