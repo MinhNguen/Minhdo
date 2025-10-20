@@ -27,7 +27,7 @@ struct Player {
 
     void addXp(int amount) {
         xp += amount;
-        if (xp >= xpToNextLevel) {
+        while (xp >= xpToNextLevel) {
             levelUp();
         }
     }
