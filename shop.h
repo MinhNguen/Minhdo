@@ -9,6 +9,7 @@
 #include <functional>
 #include <iostream>
 #include "player.h"
+#include "ui_renderer.h"
 
 struct ShopItem {
     int id;
@@ -89,41 +90,88 @@ public:
         if (tex) { int w, h; SDL_QueryTexture(tex, NULL, NULL, &w, &h); SDL_Rect dst = { x, y, w, h }; SDL_RenderCopy(renderer, tex, NULL, &dst); SDL_DestroyTexture(tex); }
     }
 
-    void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontSmall, TTF_Font* fontTiny, const Player& player) {
-        SDL_Color white={255,255,255,255}, black={0,0,0,255}, green={0,200,0,255}, gray={128,128,128,255}, orange={255,140,0,255};
-        renderCenteredText(renderer, fontBig, "DINO SHOP", black, 20, 800);
-        renderLeftText(renderer, fontSmall, "Your Coins: " + std::to_string(player.totalCoins), orange, 20, 80);
-        renderLeftText(renderer, fontTiny, "Level " + std::to_string(player.level) + " (XP: " + std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")", black, 20, 115);
+    void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontSmall, TTF_Font* fontTiny,
+            const Player& player, UIRenderer& uiRenderer) {
+        SDL_Color white={255,255,255,255}, black={0,0,0,255}, orange={255,140,0,255};
 
-        int mx, my; SDL_GetMouseState(&mx, &my);
-        int startY = 150, itemsPerRow = 3, itemWidth = 220, itemHeight = 140, spacing = 20, startX = 50;
+        // Title với glass panel
+        SDL_FRect titlePanel = {200, 10, 400, 80};
+        uiRenderer.drawEnhancedGlassPanel(titlePanel, {50, 100, 200, 180});
+        uiRenderer.renderTextCentered("DINO SHOP", 400, 50, fontBig, white);
+
+        // Player info panel
+        SDL_FRect infoPanel = {20, 100, 760, 60};
+        uiRenderer.drawEnhancedGlassPanel(infoPanel, {100, 50, 150, 160});
+
+        uiRenderer.renderTextLeft("Coins: " + std::to_string(player.totalCoins), 40, 115, fontSmall, orange);
+        uiRenderer.renderTextLeft("Level " + std::to_string(player.level) + " (XP: " +
+                                 std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")",
+                                 40, 145, fontTiny, white);
+
+        int mx, my;
+        SDL_GetMouseState(&mx, &my);
+        int startY = 180, itemsPerRow = 3, itemWidth = 220, itemHeight = 180, spacing = 25, startX = 50;
 
         for (size_t i = 0; i < items.size(); i++) {
             int col = i % itemsPerRow, row = i / itemsPerRow;
-            int x = startX + col * (itemWidth + spacing), y = startY + row * (itemHeight + spacing);
-            SDL_Rect itemRect = {x, y, itemWidth, itemHeight};
-            bool hovered = (mx >= itemRect.x && mx <= itemRect.x + itemRect.w && my >= itemRect.y && my <= itemRect.y + itemRect.h);
+            float x = startX + col * (itemWidth + spacing), y = startY + row * (itemHeight + spacing);
+            SDL_FRect itemRect = {x, y, (float)itemWidth, (float)itemHeight};
 
-            if (player.equippedSkinIndex == (int)i) SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
-            else if (items[i].isOwned) SDL_SetRenderDrawColor(renderer, hovered?100:80, hovered?220:200, 80, 255);
-            else SDL_SetRenderDrawColor(renderer, hovered?150:120, hovered?150:120, hovered?150:120, 255);
-            SDL_RenderFillRect(renderer, &itemRect);
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderDrawRect(renderer, &itemRect);
+            bool hovered = (mx >= itemRect.x && mx <= itemRect.x + itemRect.w &&
+                           my >= itemRect.y && my <= itemRect.y + itemRect.h);
 
-            if (items[i].previewTexture) { SDL_Rect pv = {x + itemWidth/2 - 20, y + 10, 40, 60}; SDL_RenderCopy(renderer, items[i].previewTexture, nullptr, &pv); }
-            renderLeftText(renderer, fontTiny, items[i].name, black, x + 10, y + 75);
+            // Item background with glow
+            SDL_Color bgColor;
+            if (player.equippedSkinIndex == (int)i) {
+                bgColor = {255, 215, 0, 200}; // Gold for equipped
+            } else if (items[i].isOwned) {
+                bgColor = {80, 200, 80, 180}; // Green for owned
+            } else {
+                bgColor = {120, 120, 120, 180}; // Gray for locked
+            }
+
+            // Enhanced panel with glow
+            uiRenderer.drawEnhancedGlassPanel(itemRect, bgColor);
+
+            // Preview texture
+            if (items[i].previewTexture) {
+                SDL_Rect pv = {(int)(x + itemWidth/2 - 30), (int)(y + 20), 60, 90};
+                SDL_RenderCopy(renderer, items[i].previewTexture, nullptr, &pv);
+            }
+
+            // Item name
+            uiRenderer.renderTextCentered(items[i].name, x + itemWidth/2, y + 125, fontTiny, white);
+
+            // Status/Price button
+            SDL_FRect statusBtn = {x + 10, y + itemHeight - 40, itemWidth - 20, 30};
+            SDL_Color btnColor;
+            std::string btnText;
 
             if (items[i].isOwned) {
-                renderLeftText(renderer, fontTiny, player.equippedSkinIndex == (int)i ? "EQUIPPED" : "OWNED", green, x + 10, y + 95);
+                if (player.equippedSkinIndex == (int)i) {
+                    btnColor = {255, 215, 0, 255};
+                    btnText = "EQUIPPED";
+                } else {
+                    btnColor = {100, 200, 100, 255};
+                    btnText = "EQUIP";
+                }
             } else {
-                renderLeftText(renderer, fontTiny, "Price: " + std::to_string(items[i].price), (player.totalCoins >= items[i].price)?green:gray, x + 10, y + 95);
+                if (player.totalCoins >= items[i].price) {
+                    btnColor = {50, 150, 255, 255};
+                } else {
+                    btnColor = {150, 50, 50, 255};
+                }
+                btnText = "BUY: " + std::to_string(items[i].price);
             }
+
+            uiRenderer.renderEnhancedButton(statusBtn, hovered, btnText, fontTiny, btnColor);
         }
-        SDL_Rect backBtn = {300, 420, 200, 50};
-        bool hovBack = (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h);
-        SDL_SetRenderDrawColor(renderer, hovBack ? 180 : 150, 50, 50, 255); SDL_RenderFillRect(renderer, &backBtn);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); SDL_RenderDrawRect(renderer, &backBtn);
-        renderCenteredText(renderer, fontSmall, "BACK TO MENU", white, backBtn.y + 12, 800);
+
+        // Back button
+        SDL_FRect backBtn = {300, 540, 200, 50};
+        bool hovBack = (mx >= backBtn.x && mx <= backBtn.x + backBtn.w &&
+                        my >= backBtn.y && my <= backBtn.y + backBtn.h);
+        uiRenderer.renderEnhancedButton(backBtn, hovBack, "BACK TO MENU", fontSmall, {200, 50, 50, 255});
     }
 
     bool handleInput(SDL_Event& e, Player& player, int& equippedSkinIndex, std::function<void()> saveCallback) {

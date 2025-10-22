@@ -1,12 +1,10 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <vector>
 #include <functional>
-#include <algorithm> // Cần cho std::remove_if
+#include <algorithm>
 
 // Include all game systems
 #include "player.h"
@@ -17,6 +15,7 @@
 #include "quest_system.h"
 #include "shop.h"
 #include "quest_screen.h"
+#include "achievement_screen.h"
 
 enum class GameState {
     MENU,
@@ -25,7 +24,8 @@ enum class GameState {
     GAME_OVER,
     LEVEL_COMPLETE,
     SHOP,
-    QUEST
+    QUEST,
+    ACHIEVEMENT
 };
 
 // ===================== Level Info Structure =====================
@@ -180,7 +180,7 @@ void savePlayerProgress(const Player& player, const Shop& shop, LevelManager& le
 
 void loadPlayerProgress(Player& player, Shop& shop, LevelManager& levelManager, AchievementSystem& achievements, QuestSystem& quests) {
     std::ifstream file("game_progress.dat");
-    if (!file.is_open()) { // Nếu file không tồn tại, khởi tạo giá trị mặc định
+    if (!file.is_open()) {
         shop.items[0].isOwned = true;
         return;
     }
@@ -201,7 +201,7 @@ void loadPlayerProgress(Player& player, Shop& shop, LevelManager& levelManager, 
     for (auto& item : shop.items) {
         file >> item.isOwned;
     }
-    shop.items[0].isOwned = true; // Skin mặc định luôn sở hữu
+    shop.items[0].isOwned = true;
 
     file.close();
 
@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
     }
 
     const int SCREEN_WIDTH = 800;
-    const int SCREEN_HEIGHT = 480;
+    const int SCREEN_HEIGHT = 600;
     const int GROUND_Y = 380;
 
     SDL_Window* window = SDL_CreateWindow("Dino Game - Complete System",
@@ -252,6 +252,7 @@ int main(int argc, char* argv[]) {
     player.groundY = GROUND_Y;
     player.y = GROUND_Y;
 
+    UIRenderer uiRenderer(renderer);
     ObstacleManager obstacleManager(GROUND_Y, 6, SCREEN_WIDTH);
     ScoreManager scoreManager(GROUND_Y, 6, SCREEN_WIDTH);
     PowerUpManager powerUpManager(GROUND_Y, 6, SCREEN_WIDTH);
@@ -262,6 +263,7 @@ int main(int argc, char* argv[]) {
     DifficultyManager difficultyManager;
     QuestSystem questSystem;
     QuestScreen questScreen;
+    AchievementScreen achievementScreen;
 
     shop.initialize(renderer);
     loadPlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
@@ -274,22 +276,30 @@ int main(int argc, char* argv[]) {
     SDL_Rect playBtn = { SCREEN_WIDTH / 2 - 150, 140, 300, 60 };
     SDL_Rect shopBtn = { SCREEN_WIDTH / 2 - 150, 220, 300, 60 };
     SDL_Rect questBtn = { SCREEN_WIDTH / 2 - 150, 300, 300, 60 };
-    SDL_Rect quitBtn = { SCREEN_WIDTH / 2 - 150, 380, 300, 60 };
+    SDL_Rect achievementBtn = { SCREEN_WIDTH / 2 - 150, 380, 300, 60 };
+    SDL_Rect quitBtn = { SCREEN_WIDTH / 2 - 150, 460, 300, 60 };
 
     auto saveCallback = [&]() {
         savePlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
     };
 
     while (running) {
+        uiRenderer.update();
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = false;
 
             if (state == GameState::MENU && e.type == SDL_MOUSEBUTTONDOWN) {
                 int mx = e.button.x, my = e.button.y;
-                if (mx >= playBtn.x && mx <= playBtn.x + playBtn.w && my >= playBtn.y && my <= playBtn.y + playBtn.h) state = GameState::LEVEL_SELECT;
-                else if (mx >= shopBtn.x && mx <= shopBtn.x + shopBtn.w && my >= shopBtn.y && my <= shopBtn.y + shopBtn.h) state = GameState::SHOP;
-                else if (mx >= questBtn.x && mx <= questBtn.x + questBtn.w && my >= questBtn.y && my <= questBtn.y + questBtn.h) state = GameState::QUEST;
-                else if (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w && my >= quitBtn.y && my <= quitBtn.y + quitBtn.h) running = false;
+                if (mx >= playBtn.x && mx <= playBtn.x + playBtn.w && my >= playBtn.y && my <= playBtn.y + playBtn.h)
+                    state = GameState::LEVEL_SELECT;
+                else if (mx >= shopBtn.x && mx <= shopBtn.x + shopBtn.w && my >= shopBtn.y && my <= shopBtn.y + shopBtn.h)
+                    state = GameState::SHOP;
+                else if (mx >= questBtn.x && mx <= questBtn.x + questBtn.w && my >= questBtn.y && my <= questBtn.y + questBtn.h)
+                    state = GameState::QUEST;
+                else if (mx >= achievementBtn.x && mx <= achievementBtn.x + achievementBtn.w && my >= achievementBtn.y && my <= achievementBtn.y + achievementBtn.h)
+                    state = GameState::ACHIEVEMENT;
+                else if (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w && my >= quitBtn.y && my <= quitBtn.y + quitBtn.h)
+                    running = false;
             }
             else if (state == GameState::SHOP) {
                 if (shop.handleInput(e, player, player.equippedSkinIndex, saveCallback)) state = GameState::MENU;
@@ -298,6 +308,10 @@ int main(int argc, char* argv[]) {
             else if (state == GameState::QUEST) {
                 if (questScreen.handleInput(e, questSystem, player)) { saveCallback(); state = GameState::MENU; }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) { saveCallback(); state = GameState::MENU; }
+            }
+            else if (state == GameState::ACHIEVEMENT) {
+                if (achievementScreen.handleInput(e)) { state = GameState::MENU; }
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) state = GameState::MENU;
             }
             else if (state == GameState::LEVEL_SELECT && e.type == SDL_MOUSEBUTTONDOWN) {
                 int mx = e.button.x, my = e.button.y;
@@ -384,7 +398,6 @@ int main(int argc, char* argv[]) {
             for (auto& coin : scoreManager.coins) {
                 if (!coin.collected && coin.checkCollision(player.x, player.y, player.width, player.height)) {
                     comboSystem.addCombo(); questSystem.onCoinCollected();
-                    // Di chuyển logic thu thập vào trong ScoreManager::update
                 }
             }
 
@@ -392,7 +405,6 @@ int main(int argc, char* argv[]) {
             for (auto& pu : powerUpManager.powerUps) {
                 if (!pu.collected && pu.checkCollision(player.x, player.y, player.width, player.height)) {
                     questSystem.onPowerupCollected();
-                    // Logic kích hoạt powerup đã nằm trong PowerUpManager::update
                 }
             }
 
@@ -430,62 +442,159 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         if (state == GameState::MENU) {
-            SDL_Color white = { 255, 255, 255, 255 }, black = { 0, 0, 0, 255 };
-            renderCenteredText(renderer, fontBig, "DINO ADVENTURE", black, 50, SCREEN_WIDTH);
-            int mx, my; SDL_GetMouseState(&mx, &my);
-            bool hovPlay = (mx >= playBtn.x && mx <= playBtn.x + playBtn.w && my >= playBtn.y && my <= playBtn.y + playBtn.h);
-            SDL_SetRenderDrawColor(renderer, hovPlay ? 80 : 50, hovPlay ? 160 : 100, 50, 255); SDL_RenderFillRect(renderer, &playBtn);
-            SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &playBtn);
-            renderCenteredText(renderer, fontSmall, "PLAY", white, playBtn.y + 15, SCREEN_WIDTH);
+            SDL_Color white = {255, 255, 255, 255};
+            SDL_Color black = {0, 0, 0, 255};
 
-            bool hovShop = (mx >= shopBtn.x && mx <= shopBtn.x + shopBtn.w && my >= shopBtn.y && my <= shopBtn.y + shopBtn.h);
-            SDL_SetRenderDrawColor(renderer, hovShop ? 160:100, hovShop ? 160:100, 50, 255); SDL_RenderFillRect(renderer, &shopBtn);
-            SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &shopBtn);
-            renderCenteredText(renderer, fontSmall, "SHOP", white, shopBtn.y + 15, SCREEN_WIDTH);
+            // Background gradient
+            for (int y = 0; y < SCREEN_HEIGHT; y++) {
+                float t = (float)y / SCREEN_HEIGHT;
+                Uint8 r = 30 + (120 - 30) * t;
+                Uint8 g = 144 + (200 - 144) * t;
+                Uint8 b = 255;
+                SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+                SDL_RenderDrawLine(renderer, 0, y, SCREEN_WIDTH, y);
+            }
 
-            bool hovQuest = (mx >= questBtn.x && mx <= questBtn.x + questBtn.w && my >= questBtn.y && my <= questBtn.y + questBtn.h);
-            SDL_SetRenderDrawColor(renderer, hovQuest ? 100:70, hovQuest ? 180:140, hovQuest ? 100:70, 255); SDL_RenderFillRect(renderer, &questBtn);
-            SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &questBtn);
-            renderCenteredText(renderer, fontSmall, "QUESTS", white, questBtn.y + 15, SCREEN_WIDTH);
+            // Title panel with glass effect
+            SDL_FRect titlePanel = {150, 30, 500, 90};
+            uiRenderer.drawEnhancedGlassPanel(titlePanel, {80, 120, 200, 200});
+            uiRenderer.renderTextCentered("DINO ADVENTURE", 400, 75, fontBig, white);
 
-            bool hovQuit = (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w && my >= quitBtn.y && my <= quitBtn.y + quitBtn.h);
-            SDL_SetRenderDrawColor(renderer, hovQuit ? 160 : 100, 50, 50, 255); SDL_RenderFillRect(renderer, &quitBtn);
-            SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &quitBtn);
-            renderCenteredText(renderer, fontSmall, "QUIT", white, quitBtn.y + 15, SCREEN_WIDTH);
+            int mx, my;
+            SDL_GetMouseState(&mx, &my);
+
+            // Play button
+            SDL_FRect playBtn = {SCREEN_WIDTH/2.0f - 150, 150, 300, 60};
+            bool hovPlay = (mx >= playBtn.x && mx <= playBtn.x + playBtn.w &&
+                            my >= playBtn.y && my <= playBtn.y + playBtn.h);
+            uiRenderer.renderEnhancedButton(playBtn, hovPlay, "PLAY", fontSmall, {50, 150, 50, 255});
+
+            // Shop button
+            SDL_FRect shopBtn = {SCREEN_WIDTH/2.0f - 150, 230, 300, 60};
+            bool hovShop = (mx >= shopBtn.x && mx <= shopBtn.x + shopBtn.w &&
+                            my >= shopBtn.y && my <= shopBtn.y + shopBtn.h);
+            uiRenderer.renderEnhancedButton(shopBtn, hovShop, "SHOP", fontSmall, {200, 150, 50, 255});
+
+            // Quest button
+            SDL_FRect questBtn = {SCREEN_WIDTH/2.0f - 150, 310, 300, 60};
+            bool hovQuest = (mx >= questBtn.x && mx <= questBtn.x + questBtn.w &&
+                             my >= questBtn.y && my <= questBtn.y + questBtn.h);
+            uiRenderer.renderEnhancedButton(questBtn, hovQuest, "QUESTS", fontSmall, {70, 180, 100, 255});
+
+            // Achievement button
+            SDL_FRect achievementBtn = {SCREEN_WIDTH/2.0f - 150, 390, 300, 60};
+            bool hovAchievement = (mx >= achievementBtn.x && mx <= achievementBtn.x + achievementBtn.w &&
+                                  my >= achievementBtn.y && my <= achievementBtn.y + achievementBtn.h);
+            uiRenderer.renderEnhancedButton(achievementBtn, hovAchievement, "ACHIEVEMENTS",
+                                           fontSmall, {200, 150, 50, 255});
+
+            // Quit button
+            SDL_FRect quitBtn = {SCREEN_WIDTH/2.0f - 150, 470, 300, 50};
+            bool hovQuit = (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w &&
+                            my >= quitBtn.y && my <= quitBtn.y + quitBtn.h);
+            uiRenderer.renderEnhancedButton(quitBtn, hovQuit, "QUIT", fontSmall, {200, 50, 50, 255});
         }
         else if (state == GameState::SHOP) {
             SDL_SetRenderDrawColor(renderer, 230, 230, 250, 255); SDL_RenderClear(renderer);
-            shop.render(renderer, fontBig, fontSmall, fontTiny, player);
+            shop.render(renderer, fontBig, fontSmall, fontTiny, player, uiRenderer);
         }
         else if (state == GameState::QUEST) {
-            SDL_SetRenderDrawColor(renderer, 220, 240, 220, 255); SDL_RenderClear(renderer);
-            questScreen.render(renderer, fontBig, fontSmall, fontTiny, questSystem, player);
+            SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255); SDL_RenderClear(renderer);
+            questScreen.render(renderer, fontBig, fontSmall, fontTiny, questSystem, player, uiRenderer);
+        }
+        else if (state == GameState::ACHIEVEMENT) {
+            SDL_SetRenderDrawColor(renderer, 255, 250, 240, 255); SDL_RenderClear(renderer);
+            achievementScreen.render(renderer, fontBig, fontSmall, fontTiny, achievementSystem, player, uiRenderer);
+            achievementScreen.updateParticles();
         }
         else if (state == GameState::LEVEL_SELECT) {
-            SDL_Color black = {0,0,0,255}, gray = {128,128,128,255}, green = {0,200,0,255};
-            renderCenteredText(renderer, fontBig, "SELECT LEVEL", black, 30, SCREEN_WIDTH);
-            int mx, my; SDL_GetMouseState(&mx, &my);
+            SDL_Color white = {255,255,255,255};
+            SDL_Color black = {0,0,0,255};
+            SDL_Color gray = {128,128,128,255};
+            SDL_Color green = {0,200,0,255};
+
+            // Background gradient
+            for (int y = 0; y < SCREEN_HEIGHT; y++) {
+                float t = (float)y / SCREEN_HEIGHT;
+                Uint8 r = 50 + (130 - 50) * t;
+                Uint8 g = 150 + (200 - 150) * t;
+                Uint8 b = 255;
+                SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+                SDL_RenderDrawLine(renderer, 0, y, SCREEN_WIDTH, y);
+            }
+
+            // Title panel
+            SDL_FRect titlePanel = {200, 15, 400, 70};
+            uiRenderer.drawEnhancedGlassPanel(titlePanel, {100, 150, 250, 200});
+            uiRenderer.renderTextCentered("SELECT LEVEL", 400, 50, fontBig, white);
+
+            int mx, my;
+            SDL_GetMouseState(&mx, &my);
+
+            // Level buttons
             for (size_t i = 0; i < levelManager.levels.size(); i++) {
                 LevelInfo& level = levelManager.levels[i];
-                int btnX = 50 + (i % 3) * 250, btnY = 120 + (i / 3) * 100;
-                SDL_Rect levelBtn = { btnX, btnY, 200, 80 };
-                bool hovered = (mx >= levelBtn.x && mx <= levelBtn.x + levelBtn.w && my >= levelBtn.y && my <= levelBtn.y + levelBtn.h);
-                SDL_SetRenderDrawColor(renderer, level.unlocked ? (hovered ? 100:50) : 80, level.unlocked ? (hovered ? 180:150) : 80, level.unlocked ? 50:80, 255);
-                SDL_RenderFillRect(renderer, &levelBtn);
-                SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &levelBtn);
-                renderLeftText(renderer, fontSmall, "Level " + std::to_string(level.levelNumber), level.unlocked ? black:gray, btnX + 10, btnY + 10);
+                int btnX = 50 + (i % 3) * 250;
+                int btnY = 110 + (i / 3) * 110;
+                SDL_FRect levelBtn = {(float)btnX, (float)btnY, 200, 90};
+
+                bool hovered = (mx >= levelBtn.x && mx <= levelBtn.x + levelBtn.w &&
+                               my >= levelBtn.y && my <= levelBtn.y + levelBtn.h);
+
+                // Background color based on unlock status
+                SDL_Color bgColor;
                 if (level.unlocked) {
-                    renderLeftText(renderer, fontTiny, level.name, black, btnX+10, btnY+40);
-                    renderLeftText(renderer, fontTiny, "Goal: " + std::to_string(level.targetScore), green, btnX+10, btnY+60);
+                    // Color based on difficulty
+                    float hue = 120.0f - (i * 30.0f); // Green to Red gradient
+                    bgColor = uiRenderer.hsvToRgb(hue, 0.6f, 0.7f);
+                    bgColor.a = 200;
                 } else {
-                    renderLeftText(renderer, fontTiny, "LOCKED", gray, btnX+50, btnY+45);
+                    bgColor = {80, 80, 80, 180};
+                }
+
+                uiRenderer.drawEnhancedGlassPanel(levelBtn, bgColor);
+
+                // Level info
+                std::string levelNum = "Level " + std::to_string(level.levelNumber);
+                uiRenderer.renderTextLeft(levelNum, levelBtn.x + 15, levelBtn.y + 12, fontSmall, white);
+
+                if (level.unlocked) {
+                    uiRenderer.renderTextLeft(level.name, levelBtn.x + 15, levelBtn.y + 40,
+                                             fontTiny, {240, 240, 240, 255});
+
+                    std::string goalText = "Goal: " + std::to_string(level.targetScore);
+                    uiRenderer.renderTextLeft(goalText, levelBtn.x + 15, levelBtn.y + 62, fontTiny, green);
+
+                    // Best score badge if exists
+                    if (level.bestScore > 0) {
+                        SDL_FRect badge = {levelBtn.x + levelBtn.w - 85, levelBtn.y + 8, 75, 25};
+                        std::string bestText = "Best: " + std::to_string(level.bestScore);
+                        uiRenderer.renderEnhancedButton(badge, false, bestText, fontTiny,
+                                                       {255, 215, 0, 255});
+                    }
+                } else {
+                    // Locked indicator
+                    SDL_FRect lockIcon = {levelBtn.x + levelBtn.w/2 - 30, levelBtn.y + 35, 60, 40};
+                    uiRenderer.drawRoundedRect(lockIcon, 10, {50, 50, 50, 255});
+                    uiRenderer.renderTextCentered("LOCKED", levelBtn.x + levelBtn.w/2,
+                                                levelBtn.y + 55, fontTiny, gray);
+                }
+
+                // Hover effect overlay
+                if (hovered && level.unlocked) {
+                    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 30);
+                    SDL_FRect hoverRect = {levelBtn.x, levelBtn.y, levelBtn.w, levelBtn.h};
+                    SDL_RenderFillRectF(renderer, &hoverRect);
+                    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                 }
             }
-            SDL_Rect backBtnLS = { SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT - 70, 200, 50 };
-            bool hovBackLS = (mx >= backBtnLS.x && mx <= backBtnLS.x + backBtnLS.w && my >= backBtnLS.y && my <= backBtnLS.y + backBtnLS.h);
-            SDL_SetRenderDrawColor(renderer, hovBackLS ? 150 : 100, 50, 50, 255); SDL_RenderFillRect(renderer, &backBtnLS);
-            SDL_SetRenderDrawColor(renderer, 0,0,0,255); SDL_RenderDrawRect(renderer, &backBtnLS);
-            renderCenteredText(renderer, fontSmall, "BACK", {255,255,255,255}, backBtnLS.y + 10, SCREEN_WIDTH);
+
+            // Back button
+            SDL_FRect backBtnLS = {SCREEN_WIDTH/2.0f - 100, SCREEN_HEIGHT - 70, 200, 50};
+            bool hovBackLS = (mx >= backBtnLS.x && mx <= backBtnLS.x + backBtnLS.w &&
+                              my >= backBtnLS.y && my <= backBtnLS.y + backBtnLS.h);
+            uiRenderer.renderEnhancedButton(backBtnLS, hovBackLS, "BACK", fontSmall, {180, 50, 50, 255});
         }
         else if (state == GameState::PLAYING || state == GameState::GAME_OVER || state == GameState::LEVEL_COMPLETE) {
             SDL_SetRenderDrawColor(renderer, 10, 139, 34, 255);

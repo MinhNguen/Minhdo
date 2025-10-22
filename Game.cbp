@@ -32,7 +32,16 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="combo_achievement.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="obstacle.h" />
+		<Unit filename="player.h" />
+		<Unit filename="powerup.h" />
+		<Unit filename="quest_screen.h" />
+		<Unit filename="quest_system.cpp" />
+		<Unit filename="quest_system.h" />
+		<Unit filename="score.h" />
+		<Unit filename="shop.h" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

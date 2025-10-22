@@ -1,16 +1,21 @@
 # depslib dependency file v1.0
-1760806701 source:d:\snakegame\game\main.cpp
+1761109327 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
-	<SDL2/SDL_ttf.h>
-	<SDL2/SDL_image.h>
 	<iostream>
 	<string>
 	<fstream>
 	<vector>
 	<functional>
+	<algorithm>
 	"player.h"
 	"obstacle.h"
 	"score.h"
+	"powerup.h"
+	"combo_achievement.h"
+	"quest_system.h"
+	"shop.h"
+	"quest_screen.h"
+	"achievement_screen.h"
 
 1759730591 d:\sdl2-devel-2.32.10-mingw\sdl2-2.32.10\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -454,9 +459,9 @@
 	"begin_code.h"
 	"close_code.h"
 
-1760806074 d:\snakegame\game\player.h
+1760942664 d:\snakegame\game\player.h
 
-1760598439 d:\snakegame\game\obstacle.h
+1760942664 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>
@@ -469,7 +474,7 @@
 	"begin_code.h"
 	"close_code.h"
 
-1760806074 d:\snakegame\game\score.h
+1760942664 d:\snakegame\game\score.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>
@@ -485,4 +490,56 @@
 	"close_code.h"
 
 1760940676 source:d:\snakegame\game\quest_system.cpp
+
+1760942664 d:\snakegame\game\powerup.h
+	<SDL2/SDL.h>
+	<vector>
+	<string>
+	<algorithm>
+	"player.h"
+
+1760942665 d:\snakegame\game\combo_achievement.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<string>
+	<vector>
+	<fstream>
+
+1760942664 d:\snakegame\game\quest_system.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<string>
+	<vector>
+	<fstream>
+
+1761109268 d:\snakegame\game\shop.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<SDL2/SDL_image.h>
+	<vector>
+	<string>
+	<functional>
+	<iostream>
+	"player.h"
+	"ui_renderer.h"
+
+1761108816 d:\snakegame\game\quest_screen.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	"quest_system.h"
+	"player.h"
+
+1761108816 d:\snakegame\game\achievement_screen.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	"combo_achievement.h"
+	"player.h"
+	<cmath>
+
+1761109114 d:\snakegame\game\ui_renderer.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<cmath>
+	<algorithm>
+	<string>
 
