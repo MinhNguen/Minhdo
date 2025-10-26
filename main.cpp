@@ -17,6 +17,7 @@
 #include "quest_screen.h"
 #include "achievement_screen.h"
 #include "daily_reset_system.h"
+#include "leaderboard.h"
 
 enum class GameState {
     MENU,
@@ -26,7 +27,8 @@ enum class GameState {
     LEVEL_COMPLETE,
     SHOP,
     QUEST,
-    ACHIEVEMENT
+    ACHIEVEMENT,
+    LEADERBOARD
 };
 
 // ===================== Level Info Structure =====================
@@ -266,6 +268,7 @@ int main(int argc, char* argv[]) {
     QuestScreen questScreen;
     AchievementScreen achievementScreen;
     DailyResetSystem dailyResetSystem;
+    Leaderboard leaderboard;
 
     shop.initialize(renderer);
     loadPlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
@@ -279,7 +282,8 @@ int main(int argc, char* argv[]) {
     SDL_Rect shopBtn = { SCREEN_WIDTH / 2 - 150, 220, 300, 60 };
     SDL_Rect questBtn = { SCREEN_WIDTH / 2 - 150, 300, 300, 60 };
     SDL_Rect achievementBtn = { SCREEN_WIDTH / 2 - 150, 380, 300, 60 };
-    SDL_Rect quitBtn = { SCREEN_WIDTH / 2 - 150, 460, 300, 60 };
+    SDL_Rect leaderboardBtn = { SCREEN_WIDTH / 2 - 150, 460, 300, 60 };
+    SDL_Rect quitBtn = { SCREEN_WIDTH / 2 - 150, 540, 300, 60 };
 
     auto saveCallback = [&]() {
         savePlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
@@ -309,6 +313,12 @@ int main(int argc, char* argv[]) {
                     state = GameState::ACHIEVEMENT;
                 else if (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w && my >= quitBtn.y && my <= quitBtn.y + quitBtn.h)
                     running = false;
+                else if (mx >= leaderboardBtn.x && mx <= leaderboardBtn.x + leaderboardBtn.w && my >= leaderboardBtn.y && my <= leaderboardBtn.y + leaderboardBtn.h)
+                    state = GameState::LEADERBOARD;
+            }
+            else if (state == GameState::LEADERBOARD) {
+                if (leaderboard.handleInput(e)) state = GameState::MENU;
+                if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) state = GameState::MENU;
             }
             else if (state == GameState::SHOP) {
                 if (shop.handleInput(e, player, player.equippedSkinIndex, saveCallback)) state = GameState::MENU;
@@ -497,11 +507,22 @@ int main(int argc, char* argv[]) {
             uiRenderer.renderEnhancedButton(achievementBtn, hovAchievement, "ACHIEVEMENTS",
                                            fontSmall, {200, 150, 50, 255});
 
+            SDL_FRect leaderboardBtn = {SCREEN_WIDTH/2.0f - 150, 470, 300, 60};
+            bool hovLeaderboard = (mx >= leaderboardBtn.x && mx <= leaderboardBtn.x + leaderboardBtn.w &&
+                                  my >= leaderboardBtn.y && my <= leaderboardBtn.y + leaderboardBtn.h);
+            uiRenderer.renderEnhancedButton(leaderboardBtn, hovLeaderboard, "LEADERBOARD",
+                                           fontSmall, {100, 100, 200, 255});
+
             // Quit button
-            SDL_FRect quitBtn = {SCREEN_WIDTH/2.0f - 150, 470, 300, 50};
+            SDL_FRect quitBtn = {SCREEN_WIDTH/2.0f - 150, 550, 300, 60};
             bool hovQuit = (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w &&
                             my >= quitBtn.y && my <= quitBtn.y + quitBtn.h);
             uiRenderer.renderEnhancedButton(quitBtn, hovQuit, "QUIT", fontSmall, {200, 50, 50, 255});
+        }
+        else if (state == GameState::LEADERBOARD) {
+            SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
+            SDL_RenderClear(renderer);
+            leaderboard.render(renderer, fontBig, fontSmall, fontTiny, uiRenderer);
         }
         else if (state == GameState::SHOP) {
             SDL_SetRenderDrawColor(renderer, 230, 230, 250, 255); SDL_RenderClear(renderer);
