@@ -16,6 +16,7 @@
 #include "shop.h"
 #include "quest_screen.h"
 #include "achievement_screen.h"
+#include "daily_reset_system.h"
 
 enum class GameState {
     MENU,
@@ -264,6 +265,7 @@ int main(int argc, char* argv[]) {
     QuestSystem questSystem;
     QuestScreen questScreen;
     AchievementScreen achievementScreen;
+    DailyResetSystem dailyResetSystem;
 
     shop.initialize(renderer);
     loadPlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
@@ -282,6 +284,13 @@ int main(int argc, char* argv[]) {
     auto saveCallback = [&]() {
         savePlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
     };
+
+    if (dailyResetSystem.shouldResetDaily()) {
+        std::cout << "Daily reset detected. Resetting daily quests and marking time..." << std::endl;
+        questSystem.resetDailyQuests();
+        dailyResetSystem.markReset();
+        saveCallback();
+    }
 
     while (running) {
         uiRenderer.update();

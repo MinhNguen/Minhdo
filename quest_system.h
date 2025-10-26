@@ -90,6 +90,23 @@ public:
         }
     }
 
+    void resetDailyQuests() {
+        // Tái tạo lại danh sách Daily Quests ban đầu và reset trạng thái
+        dailyQuests = {
+            Quest(0, "Coin Collector", "Collect 50 coins", Quest::COLLECT_COINS, 50, 50, 25),
+            Quest(1, "Score Hunter", "Reach 100 points", Quest::REACH_SCORE, 100, 40, 20)
+        };
+        for (auto& quest : dailyQuests) {
+             // Reset trạng thái
+             quest.isActive = false;
+             quest.isCompleted = false;
+             quest.rewardClaimed = false;
+             quest.currentProgress = 0;
+        }
+        // Ghi chú: mainQuests là nhiệm vụ chính nên không bị reset hàng ngày.
+        std::cout << "Daily Quests have been reset." << std::endl;
+    }
+
     void saveProgress() {
         std::ofstream file("quests.dat");
         if (!file.is_open()) return;
