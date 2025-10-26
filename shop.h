@@ -168,7 +168,7 @@ public:
         }
 
         // Back button
-        SDL_FRect backBtn = {300, 540, 200, 50};
+        SDL_FRect backBtn = {300, 100, 200, 50};
         bool hovBack = (mx >= backBtn.x && mx <= backBtn.x + backBtn.w &&
                         my >= backBtn.y && my <= backBtn.y + backBtn.h);
         uiRenderer.renderEnhancedButton(backBtn, hovBack, "BACK TO MENU", fontSmall, {200, 50, 50, 255});
@@ -177,7 +177,7 @@ public:
     bool handleInput(SDL_Event& e, Player& player, int& equippedSkinIndex, std::function<void()> saveCallback) {
         if (e.type == SDL_MOUSEBUTTONDOWN) {
             int mx = e.button.x, my = e.button.y;
-            SDL_Rect backBtn = {300, 420, 200, 50};
+            SDL_Rect backBtn = {300, 100, 200, 50};
             if (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h) return true;
 
             int startY = 150, itemsPerRow = 3, itemWidth = 220, itemHeight = 140, spacing = 20, startX = 50;

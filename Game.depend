@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1761109327 source:d:\snakegame\game\main.cpp
+1761109395 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 	<string>
@@ -512,7 +512,7 @@
 	<vector>
 	<fstream>
 
-1761109268 d:\snakegame\game\shop.h
+1761491115 d:\snakegame\game\shop.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_image.h>
