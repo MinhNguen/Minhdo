@@ -62,9 +62,20 @@ struct Achievement {
     int id;
     std::string name, description;
     bool unlocked;
+    bool rewardClaimed;
     int reward;
     enum Type { SCORE, COINS, COMBO, LEVEL } type;
     int requirement;
+    int currentProgress;
+
+    // Constructor để cho phép khởi tạo bằng danh sách khởi tạo tường minh
+    Achievement(int qid, const std::string& n, const std::string& desc, int coins, Type qtype, int req)
+        : id(qid), name(n), description(desc), unlocked(false), rewardClaimed(false),
+          reward(coins), type(qtype), requirement(req), currentProgress(0) {}
+
+    // Constructor mặc định (cần thiết cho std::vector)
+    Achievement() : id(0), name(""), description(""), unlocked(false), rewardClaimed(false),
+          reward(0), type(SCORE), requirement(0), currentProgress(0) {}
 };
 
 class AchievementSystem {
@@ -81,13 +92,22 @@ public:
 
     void initializeAchievements() {
         achievements = {
-            {0, "First Steps", "Score 50 points", false, 20, Achievement::SCORE, 50},
-            {1, "Century", "Score 100 points", false, 50, Achievement::SCORE, 100},
-            {2, "High Scorer", "Score 200 points", false, 100, Achievement::SCORE, 200},
-            {4, "Coin Collector", "Collect 50 coins", false, 30, Achievement::COINS, 50},
-            {7, "Combo Starter", "Reach 10x combo", false, 50, Achievement::COMBO, 10},
-            {10, "Explorer", "Complete Level 2", false, 75, Achievement::LEVEL, 2},
+            {0, "First Steps", "Score 50 points", 20, Achievement::SCORE, 50},
+            {1, "Century", "Score 100 points", 50, Achievement::SCORE, 100},
+            {2, "High Scorer", "Score 200 points", 100, Achievement::SCORE, 200},
+            {4, "Coin Collector", "Collect 50 coins", 30, Achievement::COINS, 50},
+            {7, "Combo Starter", "Reach 10x combo", 50, Achievement::COMBO, 10},
+            {10, "Explorer", "Complete Level 2", 75, Achievement::LEVEL, 2},
         };
+    }
+
+    bool isRewardClaimed(int achievementId) {
+        for (const auto& ach : achievements) {
+            if (ach.id == achievementId) {
+                return ach.rewardClaimed;
+            }
+        }
+        return false;
     }
 
     void checkAchievements(int score, int coins, int maxCombo, int levelCompleted) {

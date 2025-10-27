@@ -500,7 +500,7 @@
 	<algorithm>
 	"player.h"
 
-1760942665 d:\snakegame\game\combo_achievement.h
+1761546114 d:\snakegame\game\combo_achievement.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -531,12 +531,13 @@
 	"quest_system.h"
 	"player.h"
 
-1761108816 d:\snakegame\game\achievement_screen.h
+1761541058 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	"combo_achievement.h"
 	"player.h"
 	<cmath>
+	<vector>
 
 1761109114 d:\snakegame\game\ui_renderer.h
 	<SDL2/SDL.h>
@@ -560,4 +561,11 @@
 	<ctime>
 	"player.h"
 	"ui_renderer.h"
+
+1761541055 source:d:\snakegame\game\achievement_screen.cpp
+	"achievement_screen.h"
+	<iostream>
+	<sstream>
+	"player.h"
+	"combo_achievement.h"
 

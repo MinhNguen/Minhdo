@@ -329,7 +329,7 @@ int main(int argc, char* argv[]) {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) { saveCallback(); state = GameState::MENU; }
             }
             else if (state == GameState::ACHIEVEMENT) {
-                if (achievementScreen.handleInput(e)) { state = GameState::MENU; }
+                if (achievementScreen.handleInput(e, SCREEN_WIDTH, achievementSystem)) { state = GameState::MENU; }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) state = GameState::MENU;
             }
             else if (state == GameState::LEVEL_SELECT && e.type == SDL_MOUSEBUTTONDOWN) {
@@ -534,7 +534,8 @@ int main(int argc, char* argv[]) {
         }
         else if (state == GameState::ACHIEVEMENT) {
             SDL_SetRenderDrawColor(renderer, 255, 250, 240, 255); SDL_RenderClear(renderer);
-            achievementScreen.render(renderer, fontBig, fontSmall, fontTiny, achievementSystem, player, uiRenderer);
+            achievementScreen.render(renderer, fontBig, fontMedium, fontSmall,
+                             SCREEN_WIDTH, SCREEN_HEIGHT, achievementSystem, player);
             achievementScreen.updateParticles();
         }
         else if (state == GameState::LEVEL_SELECT) {
