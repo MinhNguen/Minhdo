@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1762010759 source:d:\snakegame\game\main.cpp
+1762011859 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 	<string>
@@ -18,6 +18,7 @@
 	"achievement_screen.h"
 	"daily_reset_system.h"
 	"leaderboard.h"
+	"map_theme.h"
 
 1759730591 d:\sdl2-devel-2.32.10-mingw\sdl2-2.32.10\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -508,12 +509,13 @@
 	<fstream>
 	"player.h"
 
-1761492288 d:\snakegame\game\quest_system.h
+1762014540 d:\snakegame\game\quest_system.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
 	<vector>
 	<fstream>
+	<iostream>
 
 1761491115 d:\snakegame\game\shop.h
 	<SDL2/SDL.h>
@@ -569,4 +571,10 @@
 	<sstream>
 	"player.h"
 	"combo_achievement.h"
+
+1762011859 d:\snakegame\game\map_theme.h
+	<SDL2/SDL.h>
+	<string>
+	<vector>
+	<cmath>
 

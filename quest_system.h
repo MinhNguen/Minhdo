@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iostream>
 
 struct Quest {
     int id;
