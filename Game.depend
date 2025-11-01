@@ -1,24 +1,7 @@
 # depslib dependency file v1.0
-1762011859 source:d:\snakegame\game\main.cpp
-	<SDL2/SDL.h>
+1762014988 source:d:\snakegame\game\main.cpp
+	"game.h"
 	<iostream>
-	<string>
-	<fstream>
-	<vector>
-	<functional>
-	<algorithm>
-	"player.h"
-	"obstacle.h"
-	"score.h"
-	"powerup.h"
-	"combo_achievement.h"
-	"quest_system.h"
-	"shop.h"
-	"quest_screen.h"
-	"achievement_screen.h"
-	"daily_reset_system.h"
-	"leaderboard.h"
-	"map_theme.h"
 
 1759730591 d:\sdl2-devel-2.32.10-mingw\sdl2-2.32.10\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -464,7 +447,7 @@
 
 1760942664 d:\snakegame\game\player.h
 
-1760942664 d:\snakegame\game\obstacle.h
+1762016119 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>
@@ -577,4 +560,29 @@
 	<string>
 	<vector>
 	<cmath>
+
+1762014988 source:d:\snakegame\game\game.cpp
+	"game.h"
+	<iostream>
+	<fstream>
+
+1762014453 d:\snakegame\game\game.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<string>
+	<vector>
+	<functional>
+	"player.h"
+	"obstacle.h"
+	"score.h"
+	"powerup.h"
+	"combo_achievement.h"
+	"quest_system.h"
+	"shop.h"
+	"quest_screen.h"
+	"achievement_screen.h"
+	"daily_reset_system.h"
+	"leaderboard.h"
+	"map_theme.h"
+	"ui_renderer.h"
 
