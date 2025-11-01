@@ -18,6 +18,7 @@
 #include "achievement_screen.h"
 #include "daily_reset_system.h"
 #include "leaderboard.h"
+#include "map_theme.h"  // NEW: Map theme system
 
 enum class GameState {
     MENU,
@@ -41,6 +42,7 @@ struct LevelInfo {
     int targetScore;
     bool unlocked;
     int bestScore;
+    MapThemeType themeType;  // NEW: Theme cho mỗi level
 };
 
 // ===================== Level Manager =====================
@@ -57,11 +59,11 @@ public:
 
     void initializeLevels() {
         levels = {
-            {1, "Easy Valley", 6, 90, 250, 50, true, 0},
-            {2, "Rocky Hills", 7, 80, 220, 100, false, 0},
-            {3, "Desert Storm", 8, 70, 200, 150, false, 0},
-            {4, "Thunder Plains", 9, 60, 180, 200, false, 0},
-            {5, "Volcano Peak", 10, 50, 150, 300, false, 0}
+            {1, "Easy Valley", 6, 90, 250, 50, true, 0, GRASSLAND},
+            {2, "Rocky Hills", 7, 80, 220, 100, false, 0, DESERT},
+            {3, "Desert Storm", 8, 70, 200, 150, false, 0, FOREST},
+            {4, "Thunder Plains", 9, 60, 180, 200, false, 0, MOUNTAIN},
+            {5, "Volcano Peak", 10, 50, 150, 300, false, 0, VOLCANO}
         };
     }
 
@@ -155,64 +157,49 @@ void savePlayerProgress(const Player& player, const Shop& shop, LevelManager& le
                        AchievementSystem& achievements, QuestSystem& quests) {
     std::ofstream file("game_progress.dat", std::ios::trunc);
     if (file.is_open()) {
-        // Lưu tiến trình level
         for (const auto& level : levelManager.levels) {
             file << level.unlocked << " " << level.bestScore << "\n";
         }
-
-        // Lưu thông tin người chơi
         file << player.totalCoins << "\n";
         file << player.equippedSkinIndex << "\n";
         file << player.level << "\n";
         file << player.xp << "\n";
         file << player.xpToNextLevel << "\n";
-
-        // Lưu trạng thái shop
         for (const auto& item : shop.items) {
             file << item.isOwned << " ";
         }
         file << "\n";
-
         file.close();
     }
-
-    // Lưu achievements và quests
     achievements.saveProgress();
     quests.saveProgress();
 }
 
-void loadPlayerProgress(Player& player, Shop& shop, LevelManager& levelManager, AchievementSystem& achievements, QuestSystem& quests) {
+void loadPlayerProgress(Player& player, Shop& shop, LevelManager& levelManager,
+                       AchievementSystem& achievements, QuestSystem& quests) {
     std::ifstream file("game_progress.dat");
     if (!file.is_open()) {
         shop.items[0].isOwned = true;
         return;
     }
 
-    // Load level progress
     for (auto& level : levelManager.levels) {
         file >> level.unlocked >> level.bestScore;
     }
-
-    // Load player data
     file >> player.totalCoins;
     file >> player.equippedSkinIndex;
     file >> player.level;
     file >> player.xp;
     file >> player.xpToNextLevel;
-
-    // Load shop data
     for (auto& item : shop.items) {
         file >> item.isOwned;
     }
     shop.items[0].isOwned = true;
-
     file.close();
 
-    // Load achievements and quests
     achievements.loadProgress();
     quests.loadProgress();
 }
-
 
 // ===================== Main =====================
 int main(int argc, char* argv[]) {
@@ -270,6 +257,10 @@ int main(int argc, char* argv[]) {
     DailyResetSystem dailyResetSystem;
     Leaderboard leaderboard;
 
+    // NEW: Map Theme and Day/Night Cycle
+    MapTheme mapTheme(GRASSLAND);
+    DayNightCycle dayNightCycle(0.0008f); // Chu kỳ ~20 phút thực tế
+
     shop.initialize(renderer);
     loadPlayerProgress(player, shop, levelManager, achievementSystem, questSystem);
 
@@ -290,7 +281,7 @@ int main(int argc, char* argv[]) {
     };
 
     if (dailyResetSystem.shouldResetDaily()) {
-        std::cout << "Daily reset detected. Resetting daily quests and marking time..." << std::endl;
+        std::cout << "Daily reset detected. Resetting daily quests..." << std::endl;
         questSystem.resetDailyQuests();
         dailyResetSystem.markReset();
         saveCallback();
@@ -298,6 +289,7 @@ int main(int argc, char* argv[]) {
 
     while (running) {
         uiRenderer.update();
+
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = false;
 
@@ -340,9 +332,15 @@ int main(int argc, char* argv[]) {
                     int btnX = 50 + (i % 3) * 250;
                     int btnY = 120 + (i / 3) * 100;
                     SDL_Rect levelBtn = { btnX, btnY, 200, 80 };
-                    if (mx >= levelBtn.x && mx <= levelBtn.x + levelBtn.w && my >= levelBtn.y && my <= levelBtn.y + levelBtn.h && levelManager.levels[i].unlocked) {
+                    if (mx >= levelBtn.x && mx <= levelBtn.x + levelBtn.w &&
+                        my >= levelBtn.y && my <= levelBtn.y + levelBtn.h &&
+                        levelManager.levels[i].unlocked) {
                         levelManager.setCurrentLevel(i);
                         LevelInfo& level = levelManager.getCurrentLevelInfo();
+
+                        // Set map theme cho level
+                        mapTheme.setTheme(level.themeType);
+                        dayNightCycle.reset();
 
                         obstacleManager = ObstacleManager(GROUND_Y, level.obstacleSpeed, SCREEN_WIDTH);
                         scoreManager = ScoreManager(GROUND_Y, level.obstacleSpeed, SCREEN_WIDTH);
@@ -360,7 +358,9 @@ int main(int argc, char* argv[]) {
                     }
                 }
                 SDL_Rect backBtnLS = { SCREEN_WIDTH / 2 - 100, SCREEN_HEIGHT - 70, 200, 50 };
-                if (mx >= backBtnLS.x && mx <= backBtnLS.x + backBtnLS.w && my >= backBtnLS.y && my <= backBtnLS.y + backBtnLS.h) state = GameState::MENU;
+                if (mx >= backBtnLS.x && mx <= backBtnLS.x + backBtnLS.w &&
+                    my >= backBtnLS.y && my <= backBtnLS.y + backBtnLS.h)
+                    state = GameState::MENU;
             }
             else if (state == GameState::PLAYING && !gameOver && e.type == SDL_KEYDOWN) {
                 if ((e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_UP) && player.isOnGround) {
@@ -377,7 +377,9 @@ int main(int argc, char* argv[]) {
                     LevelInfo& level = levelManager.getCurrentLevelInfo();
                     obstacleManager.clear(); obstacleManager.spawnInterval = level.spawnInterval;
                     scoreManager.reset(); powerUpManager.reset();
-                    comboSystem.reset(); difficultyManager.reset(); questSystem.resetSessionStats();
+                    comboSystem.reset(); difficultyManager.reset();
+                    questSystem.resetSessionStats();
+                    dayNightCycle.reset();
                     player.x = 50; player.y = GROUND_Y; player.vy = 0; player.isOnGround = true;
                     gameOver = false; state = GameState::PLAYING;
                 } else if (e.key.keysym.sym == SDLK_m) {
@@ -390,11 +392,15 @@ int main(int argc, char* argv[]) {
                         levelManager.setCurrentLevel(levelManager.currentLevel + 1);
                         LevelInfo& level = levelManager.getCurrentLevelInfo();
 
+                        mapTheme.setTheme(level.themeType);
+                        dayNightCycle.reset();
+
                         obstacleManager = ObstacleManager(GROUND_Y, level.obstacleSpeed, SCREEN_WIDTH);
                         scoreManager = ScoreManager(GROUND_Y, level.obstacleSpeed, SCREEN_WIDTH);
                         powerUpManager = PowerUpManager(GROUND_Y, level.obstacleSpeed, SCREEN_WIDTH);
 
-                        comboSystem.reset(); difficultyManager.reset(); questSystem.resetSessionStats();
+                        comboSystem.reset(); difficultyManager.reset();
+                        questSystem.resetSessionStats();
                         player.x = 50; player.y = GROUND_Y; player.vy = 0; player.isOnGround = true;
                         gameOver = false; state = GameState::PLAYING;
                     }
@@ -405,9 +411,15 @@ int main(int argc, char* argv[]) {
         }
 
         if (state == GameState::PLAYING && !gameOver) {
+            // Update day/night cycle
+            dayNightCycle.update();
+            mapTheme.update(SCREEN_WIDTH, SCREEN_HEIGHT, dayNightCycle);
+
             if (!player.isOnGround) player.vy += player.gravity;
             player.y += player.vy;
-            if (player.y >= GROUND_Y) { player.y = GROUND_Y; player.vy = 0; player.isOnGround = true; }
+            if (player.y >= GROUND_Y) {
+                player.y = GROUND_Y; player.vy = 0; player.isOnGround = true;
+            }
 
             difficultyManager.update();
             obstacleManager.setSpeed(difficultyManager.getSpeed());
@@ -435,7 +447,10 @@ int main(int argc, char* argv[]) {
             questSystem.updateQuests();
             achievementSystem.update();
 
-            achievementSystem.checkAchievements(scoreManager.getCurrentScore(), player.totalCoins, comboSystem.getMaxCombo(), levelManager.currentLevel + 1);
+            achievementSystem.checkAchievements(scoreManager.getCurrentScore(),
+                                               player.totalCoins,
+                                               comboSystem.getMaxCombo(),
+                                               levelManager.currentLevel + 1);
 
             if (levelManager.isLevelComplete(scoreManager.getCurrentScore())) {
                 levelManager.updateBestScore(scoreManager.getCurrentScore());
@@ -448,7 +463,8 @@ int main(int argc, char* argv[]) {
                 state = GameState::LEVEL_COMPLETE;
             }
 
-            if (obstacleManager.checkCollisionWithPlayer(player.x, player.y, player.width, player.height) && !powerUpManager.shieldActive) {
+            if (obstacleManager.checkCollisionWithPlayer(player.x, player.y, player.width, player.height) &&
+                !powerUpManager.shieldActive) {
                 gameOver = true;
                 questSystem.onDamageTaken();
                 levelManager.updateBestScore(scoreManager.getCurrentScore());
@@ -459,14 +475,11 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 30, 144, 255, 255);
         SDL_RenderClear(renderer);
 
         if (state == GameState::MENU) {
             SDL_Color white = {255, 255, 255, 255};
-            SDL_Color black = {0, 0, 0, 255};
 
-            // Background gradient
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
                 float t = (float)y / SCREEN_HEIGHT;
                 Uint8 r = 30 + (120 - 30) * t;
@@ -476,7 +489,6 @@ int main(int argc, char* argv[]) {
                 SDL_RenderDrawLine(renderer, 0, y, SCREEN_WIDTH, y);
             }
 
-            // Title panel with glass effect
             SDL_FRect titlePanel = {150, 30, 500, 90};
             uiRenderer.drawEnhancedGlassPanel(titlePanel, {80, 120, 200, 200});
             uiRenderer.renderTextCentered("DINO ADVENTURE", 400, 75, fontBig, white);
@@ -484,25 +496,21 @@ int main(int argc, char* argv[]) {
             int mx, my;
             SDL_GetMouseState(&mx, &my);
 
-            // Play button
             SDL_FRect playBtn = {SCREEN_WIDTH/2.0f - 150, 150, 300, 60};
             bool hovPlay = (mx >= playBtn.x && mx <= playBtn.x + playBtn.w &&
                             my >= playBtn.y && my <= playBtn.y + playBtn.h);
             uiRenderer.renderEnhancedButton(playBtn, hovPlay, "PLAY", fontSmall, {50, 150, 50, 255});
 
-            // Shop button
             SDL_FRect shopBtn = {SCREEN_WIDTH/2.0f - 150, 230, 300, 60};
             bool hovShop = (mx >= shopBtn.x && mx <= shopBtn.x + shopBtn.w &&
                             my >= shopBtn.y && my <= shopBtn.y + shopBtn.h);
             uiRenderer.renderEnhancedButton(shopBtn, hovShop, "SHOP", fontSmall, {200, 150, 50, 255});
 
-            // Quest button
             SDL_FRect questBtn = {SCREEN_WIDTH/2.0f - 150, 310, 300, 60};
             bool hovQuest = (mx >= questBtn.x && mx <= questBtn.x + questBtn.w &&
                              my >= questBtn.y && my <= questBtn.y + questBtn.h);
             uiRenderer.renderEnhancedButton(questBtn, hovQuest, "QUESTS", fontSmall, {70, 180, 100, 255});
 
-            // Achievement button
             SDL_FRect achievementBtn = {SCREEN_WIDTH/2.0f - 150, 390, 300, 60};
             bool hovAchievement = (mx >= achievementBtn.x && mx <= achievementBtn.x + achievementBtn.w &&
                                   my >= achievementBtn.y && my <= achievementBtn.y + achievementBtn.h);
@@ -515,7 +523,6 @@ int main(int argc, char* argv[]) {
             uiRenderer.renderEnhancedButton(leaderboardBtn, hovLeaderboard, "LEADERBOARD",
                                            fontSmall, {100, 100, 200, 255});
 
-            // Quit button
             SDL_FRect quitBtn = {SCREEN_WIDTH/2.0f - 150, 550, 300, 60};
             bool hovQuit = (mx >= quitBtn.x && mx <= quitBtn.x + quitBtn.w &&
                             my >= quitBtn.y && my <= quitBtn.y + quitBtn.h);
@@ -527,26 +534,26 @@ int main(int argc, char* argv[]) {
             leaderboard.render(renderer, fontBig, fontSmall, fontTiny, uiRenderer);
         }
         else if (state == GameState::SHOP) {
-            SDL_SetRenderDrawColor(renderer, 230, 230, 250, 255); SDL_RenderClear(renderer);
+            SDL_SetRenderDrawColor(renderer, 230, 230, 250, 255);
+            SDL_RenderClear(renderer);
             shop.render(renderer, fontBig, fontSmall, fontTiny, player, uiRenderer);
         }
         else if (state == GameState::QUEST) {
-            SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255); SDL_RenderClear(renderer);
+            SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
+            SDL_RenderClear(renderer);
             questScreen.render(renderer, fontBig, fontSmall, fontTiny, questSystem, player, uiRenderer);
         }
         else if (state == GameState::ACHIEVEMENT) {
-            SDL_SetRenderDrawColor(renderer, 255, 250, 240, 255); SDL_RenderClear(renderer);
+            SDL_SetRenderDrawColor(renderer, 255, 250, 240, 255);
+            SDL_RenderClear(renderer);
             achievementScreen.render(renderer, fontBig, fontMedium, fontSmall,
                              SCREEN_WIDTH, SCREEN_HEIGHT, achievementSystem, player);
             achievementScreen.updateParticles();
         }
         else if (state == GameState::LEVEL_SELECT) {
             SDL_Color white = {255,255,255,255};
-            SDL_Color black = {0,0,0,255};
-            SDL_Color gray = {128,128,128,255};
             SDL_Color green = {0,200,0,255};
 
-            // Background gradient
             for (int y = 0; y < SCREEN_HEIGHT; y++) {
                 float t = (float)y / SCREEN_HEIGHT;
                 Uint8 r = 50 + (130 - 50) * t;
@@ -556,7 +563,6 @@ int main(int argc, char* argv[]) {
                 SDL_RenderDrawLine(renderer, 0, y, SCREEN_WIDTH, y);
             }
 
-            // Title panel
             SDL_FRect titlePanel = {200, 15, 400, 70};
             uiRenderer.drawEnhancedGlassPanel(titlePanel, {100, 150, 250, 200});
             uiRenderer.renderTextCentered("SELECT LEVEL", 400, 50, fontBig, white);
@@ -564,7 +570,6 @@ int main(int argc, char* argv[]) {
             int mx, my;
             SDL_GetMouseState(&mx, &my);
 
-            // Level buttons
             for (size_t i = 0; i < levelManager.levels.size(); i++) {
                 LevelInfo& level = levelManager.levels[i];
                 int btnX = 50 + (i % 3) * 250;
@@ -574,11 +579,9 @@ int main(int argc, char* argv[]) {
                 bool hovered = (mx >= levelBtn.x && mx <= levelBtn.x + levelBtn.w &&
                                my >= levelBtn.y && my <= levelBtn.y + levelBtn.h);
 
-                // Background color based on unlock status
                 SDL_Color bgColor;
                 if (level.unlocked) {
-                    // Color based on difficulty
-                    float hue = 120.0f - (i * 30.0f); // Green to Red gradient
+                    float hue = 120.0f - (i * 30.0f);
                     bgColor = uiRenderer.hsvToRgb(hue, 0.6f, 0.7f);
                     bgColor.a = 200;
                 } else {
@@ -587,7 +590,6 @@ int main(int argc, char* argv[]) {
 
                 uiRenderer.drawEnhancedGlassPanel(levelBtn, bgColor);
 
-                // Level info
                 std::string levelNum = "Level " + std::to_string(level.levelNumber);
                 uiRenderer.renderTextLeft(levelNum, levelBtn.x + 15, levelBtn.y + 12, fontSmall, white);
 
@@ -598,7 +600,6 @@ int main(int argc, char* argv[]) {
                     std::string goalText = "Goal: " + std::to_string(level.targetScore);
                     uiRenderer.renderTextLeft(goalText, levelBtn.x + 15, levelBtn.y + 62, fontTiny, green);
 
-                    // Best score badge if exists
                     if (level.bestScore > 0) {
                         SDL_FRect badge = {levelBtn.x + levelBtn.w - 85, levelBtn.y + 8, 75, 25};
                         std::string bestText = "Best: " + std::to_string(level.bestScore);
@@ -606,14 +607,12 @@ int main(int argc, char* argv[]) {
                                                        {255, 215, 0, 255});
                     }
                 } else {
-                    // Locked indicator
                     SDL_FRect lockIcon = {levelBtn.x + levelBtn.w/2 - 30, levelBtn.y + 35, 60, 40};
                     uiRenderer.drawRoundedRect(lockIcon, 10, {50, 50, 50, 255});
                     uiRenderer.renderTextCentered("LOCKED", levelBtn.x + levelBtn.w/2,
-                                                levelBtn.y + 55, fontTiny, gray);
+                                                levelBtn.y + 55, fontTiny, {128,128,128,255});
                 }
 
-                // Hover effect overlay
                 if (hovered && level.unlocked) {
                     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
                     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 30);
@@ -623,31 +622,66 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            // Back button
             SDL_FRect backBtnLS = {SCREEN_WIDTH/2.0f - 100, SCREEN_HEIGHT - 70, 200, 50};
             bool hovBackLS = (mx >= backBtnLS.x && mx <= backBtnLS.x + backBtnLS.w &&
                               my >= backBtnLS.y && my <= backBtnLS.y + backBtnLS.h);
             uiRenderer.renderEnhancedButton(backBtnLS, hovBackLS, "BACK", fontSmall, {180, 50, 50, 255});
         }
         else if (state == GameState::PLAYING || state == GameState::GAME_OVER || state == GameState::LEVEL_COMPLETE) {
-            SDL_SetRenderDrawColor(renderer, 10, 139, 34, 255);
-            SDL_Rect ground = { 0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_Y };
-            SDL_RenderFillRect(renderer, &ground);
+            // Render dynamic background with day/night cycle
+            mapTheme.renderBackground(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, dayNightCycle);
 
+            // Render ground with theme
+            mapTheme.renderGround(renderer, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT, dayNightCycle);
+
+            // Render environment particles
+            mapTheme.renderParticles(renderer);
+
+            // Render game objects
             obstacleManager.render(renderer);
             scoreManager.render(renderer);
             powerUpManager.render(renderer);
 
+            // Render player
             SDL_Texture* skin = shop.items[player.equippedSkinIndex].texture;
             if (skin) {
                 SDL_Rect rect = { player.x, player.y - (int)player.height, (int)player.width, (int)player.height };
                 SDL_RenderCopy(renderer, skin, nullptr, &rect);
             }
 
-            SDL_Color white = {255,255,255,255}, yellow = {255,255,0,255}, black = {0,0,0,255};
+            // UI overlay with adjusted colors for visibility
+            SDL_Color white = {255,255,255,255};
+            SDL_Color yellow = {255,255,0,255};
+            SDL_Color black = {0,0,0,255};
+
+            // Semi-transparent background for text readability
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+            SDL_Rect uiPanel = {5, 5, 300, 90};
+            SDL_RenderFillRect(renderer, &uiPanel);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
             LevelInfo& level = levelManager.getCurrentLevelInfo();
-            renderLeftText(renderer, fontSmall, "Level " + std::to_string(level.levelNumber) + ": " + level.name, black, 10, 10);
-            renderLeftText(renderer, fontSmall, "Score: " + std::to_string(scoreManager.getCurrentScore()) + " / " + std::to_string(level.targetScore), black, 10, 40);
+            renderLeftText(renderer, fontSmall, "Level " + std::to_string(level.levelNumber) + ": " + level.name, white, 10, 10);
+            renderLeftText(renderer, fontSmall, "Score: " + std::to_string(scoreManager.getCurrentScore()) + " / " + std::to_string(level.targetScore), white, 10, 40);
+
+            // Display time of day
+            std::string timeOfDayStr;
+            switch(dayNightCycle.getCurrentTimeOfDay()) {
+                case MORNING: timeOfDayStr = "Morning"; break;
+                case DAY: timeOfDayStr = "Day"; break;
+                case EVENING: timeOfDayStr = "Evening"; break;
+                case NIGHT: timeOfDayStr = "Night"; break;
+            }
+            renderLeftText(renderer, fontTiny, "Time: " + timeOfDayStr, {200,200,255,255}, 10, 70);
+
+            // Player stats panel
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+            SDL_Rect statsPanel = {SCREEN_WIDTH - 160, 5, 155, 60};
+            SDL_RenderFillRect(renderer, &statsPanel);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
             renderLeftText(renderer, fontTiny, "Coins: " + std::to_string(player.totalCoins), yellow, SCREEN_WIDTH - 150, 10);
             renderLeftText(renderer, fontTiny, "Lvl " + std::to_string(player.level) + " (XP: " + std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")", white, SCREEN_WIDTH - 150, 30);
 
@@ -656,16 +690,32 @@ int main(int argc, char* argv[]) {
             questSystem.renderNotification(renderer, fontSmall, SCREEN_WIDTH);
 
             if (state == GameState::GAME_OVER) {
+                // Dark overlay
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
+                SDL_Rect overlay = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+                SDL_RenderFillRect(renderer, &overlay);
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
                 renderCenteredText(renderer, fontBig, "GAME OVER", white, 120, SCREEN_WIDTH);
                 renderCenteredText(renderer, fontMedium, "Final Score: " + std::to_string(scoreManager.getCurrentScore()), yellow, 190, SCREEN_WIDTH);
                 renderCenteredText(renderer, fontSmall, "Max Combo: x" + std::to_string(comboSystem.getMaxCombo()), white, 230, SCREEN_WIDTH);
                 renderCenteredText(renderer, fontSmall, "PRESS R TO RETRY OR M FOR MENU", white, 280, SCREEN_WIDTH);
             }
             else if (state == GameState::LEVEL_COMPLETE) {
-                 SDL_Color green = { 0, 255, 0, 255 }, gold = {255, 215, 0, 255};
+                // Light overlay
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 100);
+                SDL_Rect overlay = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+                SDL_RenderFillRect(renderer, &overlay);
+                SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+
+                SDL_Color green = { 0, 255, 0, 255 };
+                SDL_Color gold = {255, 215, 0, 255};
                 renderCenteredText(renderer, fontBig, "LEVEL COMPLETE!", green, 80, SCREEN_WIDTH);
                 renderCenteredText(renderer, fontMedium, "Final Score: " + std::to_string(scoreManager.getCurrentScore()), gold, 190, SCREEN_WIDTH);
-                 if (static_cast<size_t>(levelManager.currentLevel) < levelManager.levels.size() - 1) {
+
+                if (static_cast<size_t>(levelManager.currentLevel) < levelManager.levels.size() - 1) {
                     renderCenteredText(renderer, fontSmall, "Press N for NEXT LEVEL or M for MENU", white, 310, SCREEN_WIDTH);
                 } else {
                     renderCenteredText(renderer, fontSmall, "Congratulations! All levels complete!", gold, 270, SCREEN_WIDTH);
@@ -680,9 +730,14 @@ int main(int argc, char* argv[]) {
 
     saveCallback();
     shop.cleanup();
-    TTF_CloseFont(fontBig); TTF_CloseFont(fontMedium); TTF_CloseFont(fontSmall); TTF_CloseFont(fontTiny);
+    TTF_CloseFont(fontBig);
+    TTF_CloseFont(fontMedium);
+    TTF_CloseFont(fontSmall);
+    TTF_CloseFont(fontTiny);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    IMG_Quit(); TTF_Quit(); SDL_Quit();
+    IMG_Quit();
+    TTF_Quit();
+    SDL_Quit();
     return 0;
 }
