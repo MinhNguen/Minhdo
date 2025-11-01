@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1761494071 source:d:\snakegame\game\main.cpp
+1762010759 source:d:\snakegame\game\main.cpp
 	<SDL2/SDL.h>
 	<iostream>
 	<string>
@@ -500,12 +500,13 @@
 	<algorithm>
 	"player.h"
 
-1761546114 d:\snakegame\game\combo_achievement.h
+1762010839 d:\snakegame\game\combo_achievement.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
 	<vector>
 	<fstream>
+	"player.h"
 
 1761492288 d:\snakegame\game\quest_system.h
 	<SDL2/SDL.h>
@@ -531,7 +532,7 @@
 	"quest_system.h"
 	"player.h"
 
-1761541058 d:\snakegame\game\achievement_screen.h
+1762010759 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	"combo_achievement.h"

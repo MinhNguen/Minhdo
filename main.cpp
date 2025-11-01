@@ -329,7 +329,9 @@ int main(int argc, char* argv[]) {
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) { saveCallback(); state = GameState::MENU; }
             }
             else if (state == GameState::ACHIEVEMENT) {
-                if (achievementScreen.handleInput(e, SCREEN_WIDTH, achievementSystem)) { state = GameState::MENU; }
+                if (achievementScreen.handleInput(e, SCREEN_WIDTH, achievementSystem, player)) {
+                    state = GameState::MENU;
+                }
                 if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) state = GameState::MENU;
             }
             else if (state == GameState::LEVEL_SELECT && e.type == SDL_MOUSEBUTTONDOWN) {

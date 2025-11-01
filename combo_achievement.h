@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include "player.h"
 
 // ===================== Combo System =====================
 class ComboSystem {
@@ -101,6 +102,18 @@ public:
         };
     }
 
+    void claimReward(int achievementId, Player& player) {
+        for (auto& ach : achievements) {
+            if (ach.id == achievementId && ach.unlocked && !ach.rewardClaimed) {
+                player.totalCoins += ach.reward;
+                player.addXp(ach.reward);
+                ach.rewardClaimed = true;
+                saveProgress();
+                return;
+            }
+        }
+    }
+
     bool isRewardClaimed(int achievementId) {
         for (const auto& ach : achievements) {
             if (ach.id == achievementId) {
@@ -126,6 +139,7 @@ public:
                 }
             }
         }
+        saveProgress();
     }
 
     void update() { if (notificationTimer > 0) notificationTimer--; }

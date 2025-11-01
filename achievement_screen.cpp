@@ -193,7 +193,7 @@ void AchievementScreen::renderAchievementList(SDL_Renderer* renderer, TTF_Font* 
 
 
 // Định nghĩa Phương thức handleInput
-bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem& achievementSystem) {
+bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem& achievementSystem, Player& player) {
     if (e.type == SDL_MOUSEBUTTONDOWN) {
         int mx = e.button.x, my = e.button.y;
 
@@ -230,19 +230,13 @@ bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem
                 SDL_Rect claimBtn = {rect.x + rect.w - 80, rect.y + 10, 70, 40};
 
                 if (mx >= claimBtn.x && mx <= claimBtn.x + claimBtn.w && my >= claimBtn.y && my <= claimBtn.y + claimBtn.h) {
-                    // LƯU Ý: Không thể truy cập player.totalCoins tại đây vì player không được truyền vào hàm handleInput()
-                    // Giả định AchievementSystem có thể tự xử lý việc nhận thưởng và lưu tiến trình.
+                    // 1. Gọi phương thức nhận thưởng
+                    achievementSystem.claimReward(ach.id, player);
 
-                    // Để giữ cho file .cpp này độc lập, ta sẽ **KHÔNG** thực hiện logic claim thưởng tại đây
-                    // mà sẽ trả về một giá trị báo hiệu để main.cpp xử lý.
-                    // Tuy nhiên, theo logic code trước đó (quest_screen.h), việc này được xử lý trong hàm.
-                    // => Tạm thời, ta chỉ in ra và giả định logic nhận thưởng được thực hiện
-                    // (Lưu ý: Bạn cần **THÊM THAM SỐ Player&** vào `handleInput` trong file .h/ .cpp nếu muốn nhận thưởng ở đây)
-                    //
-                    // Vì không có Player& trong khai báo gốc, tôi sẽ chỉ xử lý việc claim trong main.cpp hoặc
-                    // yêu cầu bạn chỉnh sửa lại file .h để thêm Player&.
-                    //
-                    // ********** TẠM THỜI, CHỈ XỬ LÝ CLICK MÀ KHÔNG CÓ LOGIC NHẬN THƯỞNG **********
+                    // 2. Trigger hiệu ứng (nếu cần)
+                    triggerParticleBurst((float)claimBtn.x + claimBtn.w / 2, (float)claimBtn.y + claimBtn.h / 2, 20);
+
+                    return false;
                     std::cout << "Attempting to claim achievement: " << ach.name << std::endl;
                     return false;
                 }
