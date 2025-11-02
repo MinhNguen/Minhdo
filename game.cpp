@@ -268,7 +268,7 @@ void Game::handlePlayingInput(SDL_Event& e) {
             questSystem.onJump();
         } else if (e.key.keysym.sym == SDLK_d && powerUpManager.canDash()) {
             player.x += 100;
-            powerUpManager.useDash();
+            powerUpManager.useDash(player);
         } else if (e.key.keysym.sym == SDLK_ESCAPE) {
             levelManager.updateBestScore(scoreManager.getCurrentScore());
             saveProgress();
@@ -372,8 +372,9 @@ void Game::update() {
                 questSystem.onCoinCollected();
             }
         }
-
-        powerUpManager.update(player);
+        LevelInfo& level = levelManager.getCurrentLevelInfo();
+        powerUpManager.setSpeed(level.obstacleSpeed);
+        powerUpManager.update(player, &scoreManager);
         for (auto& pu : powerUpManager.powerUps) {
             if (!pu.collected && pu.checkCollision(player.x, player.y, player.width, player.height)) {
                 questSystem.onPowerupCollected();

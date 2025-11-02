@@ -477,12 +477,14 @@
 
 1760940676 source:d:\snakegame\game\quest_system.cpp
 
-1760942664 d:\snakegame\game\powerup.h
+1762069300 d:\snakegame\game\powerup.h
 	<SDL2/SDL.h>
 	<vector>
 	<string>
 	<algorithm>
+	<cmath>
 	"player.h"
+	"score.h"
 
 1762010839 d:\snakegame\game\combo_achievement.h
 	<SDL2/SDL.h>
@@ -561,7 +563,7 @@
 	<vector>
 	<cmath>
 
-1762014988 source:d:\snakegame\game\game.cpp
+1762069709 source:d:\snakegame\game\game.cpp
 	"game.h"
 	<iostream>
 	<fstream>
