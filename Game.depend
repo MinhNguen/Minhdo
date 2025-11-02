@@ -513,11 +513,12 @@
 	"player.h"
 	"ui_renderer.h"
 
-1761108816 d:\snakegame\game\quest_screen.h
+1762091802 d:\snakegame\game\quest_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	"quest_system.h"
 	"player.h"
+	"ui_renderer.h"
 
 1762010759 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
@@ -587,4 +588,12 @@
 	"leaderboard.h"
 	"map_theme.h"
 	"ui_renderer.h"
+
+1762080712 source:d:\snakegame\game\obstacle.cpp
+	"obstacle.h"
+	<iostream>
+
+1762091796 source:d:\snakegame\game\quest_screen.cpp
+	"quest_screen.h"
+	<string>
 
