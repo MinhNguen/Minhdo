@@ -54,11 +54,16 @@
 		<Unit filename="achievement_screen.h" />
 		<Unit filename="combo_achievement.h" />
 		<Unit filename="daily_reset_system.h" />
+		<Unit filename="game.cpp" />
+		<Unit filename="game.h" />
 		<Unit filename="leaderboard.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="map_theme.h" />
+		<Unit filename="obstacle.cpp" />
 		<Unit filename="obstacle.h" />
 		<Unit filename="player.h" />
 		<Unit filename="powerup.h" />
+		<Unit filename="quest_screen.cpp" />
 		<Unit filename="quest_screen.h" />
 		<Unit filename="quest_system.cpp" />
 		<Unit filename="quest_system.h" />
