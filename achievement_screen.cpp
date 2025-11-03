@@ -87,10 +87,10 @@ void AchievementScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Fo
     renderCenteredText(renderer, fontBig, "ACHIEVEMENTS", gold, 30, screenW);
 
     // Render tabs
-    SDL_Rect allTab = {100, 95, 120, 35};
-    SDL_Rect lockedTab = {230, 95, 120, 35};
-    SDL_Rect unlockedTab = {360, 95, 140, 35};
-    SDL_Rect rareTab = {510, 95, 120, 35};
+    SDL_Rect allTab = {100, 95, 150, 50};
+    SDL_Rect lockedTab = {250, 95, 150, 50};
+    SDL_Rect unlockedTab = {400, 95, 200, 50};
+    SDL_Rect rareTab = {600, 95, 150, 50};
 
     SDL_Color activeColor = {0, 120, 255, 255};
     SDL_Color inactiveColor = {50, 50, 50, 255};
@@ -99,27 +99,25 @@ void AchievementScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Fo
                                      (currentTab == ALL) ? activeColor.g : inactiveColor.g,
                                      (currentTab == ALL) ? activeColor.b : inactiveColor.b, 255);
     SDL_RenderFillRect(renderer, &allTab);
-    renderCenteredText(renderer, fontMedium, "ALL", white, allTab.y + 5, allTab.x + allTab.w/2);
+    renderText(renderer, fontMedium, "ALL", white, allTab.x, allTab.y + 5);
 
-    // ... (Thực hiện tương tự cho LOCKED, UNLOCKED, RARE tabs)
     SDL_SetRenderDrawColor(renderer, (currentTab == LOCKED) ? activeColor.r : inactiveColor.r,
                                      (currentTab == LOCKED) ? activeColor.g : inactiveColor.g,
                                      (currentTab == LOCKED) ? activeColor.b : inactiveColor.b, 255);
     SDL_RenderFillRect(renderer, &lockedTab);
-    renderCenteredText(renderer, fontMedium, "LOCKED", white, lockedTab.y + 5, lockedTab.x + lockedTab.w/2);
+    renderText(renderer, fontMedium, "LOCKED", white, lockedTab.x, lockedTab.y + 5);
 
     SDL_SetRenderDrawColor(renderer, (currentTab == UNLOCKED) ? activeColor.r : inactiveColor.r,
                                      (currentTab == UNLOCKED) ? activeColor.g : inactiveColor.g,
                                      (currentTab == UNLOCKED) ? activeColor.b : inactiveColor.b, 255);
     SDL_RenderFillRect(renderer, &unlockedTab);
-    renderCenteredText(renderer, fontMedium, "UNLOCKED", white, unlockedTab.y + 5, unlockedTab.x + unlockedTab.w/2);
+    renderText(renderer, fontMedium, "UNLOCKED", white, unlockedTab.x, unlockedTab.y + 5);
 
     SDL_SetRenderDrawColor(renderer, (currentTab == RARE) ? activeColor.r : inactiveColor.r,
                                      (currentTab == RARE) ? activeColor.g : inactiveColor.g,
                                      (currentTab == RARE) ? activeColor.b : inactiveColor.b, 255);
     SDL_RenderFillRect(renderer, &rareTab);
-    renderCenteredText(renderer, fontMedium, "RARE", white, rareTab.y + 5, rareTab.x + rareTab.w/2);
-    // ... (End of tabs)
+    renderText(renderer, fontMedium, "RARE", white, rareTab.x, rareTab.y + 5);
 
 
     // Lọc danh sách achievement dựa trên tab
@@ -204,10 +202,10 @@ bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem
         }
 
         // Tab clicks
-        SDL_Rect allTab = {100, 95, 120, 35};
-        SDL_Rect lockedTab = {230, 95, 120, 35};
-        SDL_Rect unlockedTab = {360, 95, 140, 35};
-        SDL_Rect rareTab = {510, 95, 120, 35};
+        SDL_Rect allTab = {100, 95, 150, 50};
+        SDL_Rect lockedTab = {250, 95, 150, 50};
+        SDL_Rect unlockedTab = {400, 95, 150, 50};
+        SDL_Rect rareTab = {600, 95, 150, 50};
 
         if (mx >= allTab.x && mx <= allTab.x + allTab.w && my >= allTab.y && my <= allTab.y + allTab.h)
             currentTab = ALL;

@@ -180,7 +180,7 @@ public:
             SDL_Rect backBtn = {300, 100, 200, 50};
             if (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h) return true;
 
-            int startY = 150, itemsPerRow = 3, itemWidth = 220, itemHeight = 140, spacing = 20, startX = 50;
+            int startY = 180, itemsPerRow = 3, itemWidth = 220, itemHeight = 180, spacing = 25, startX = 50;
             for (size_t i = 0; i < items.size(); i++) {
                 int col = i % itemsPerRow, row = i / itemsPerRow;
                 int x = startX + col * (itemWidth + spacing), y = startY + row * (itemHeight + spacing);

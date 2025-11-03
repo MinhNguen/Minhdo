@@ -445,7 +445,7 @@
 	"begin_code.h"
 	"close_code.h"
 
-1760942664 d:\snakegame\game\player.h
+1762157192 d:\snakegame\game\player.h
 
 1762080707 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
@@ -494,7 +494,7 @@
 	<fstream>
 	"player.h"
 
-1762014540 d:\snakegame\game\quest_system.h
+1762157192 d:\snakegame\game\quest_system.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -502,7 +502,7 @@
 	<fstream>
 	<iostream>
 
-1761491115 d:\snakegame\game\shop.h
+1762157375 d:\snakegame\game\shop.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_image.h>
@@ -535,12 +535,12 @@
 	<algorithm>
 	<string>
 
-1761491917 d:\snakegame\game\daily_reset_system.h
+1762157192 d:\snakegame\game\daily_reset_system.h
 	<ctime>
 	<fstream>
 	<string>
 
-1761493924 d:\snakegame\game\leaderboard.h
+1762157192 d:\snakegame\game\leaderboard.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -564,12 +564,12 @@
 	<vector>
 	<cmath>
 
-1762069709 source:d:\snakegame\game\game.cpp
+1762157192 source:d:\snakegame\game\game.cpp
 	"game.h"
 	<iostream>
 	<fstream>
 
-1762014453 d:\snakegame\game\game.h
+1762157192 d:\snakegame\game\game.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -596,4 +596,8 @@
 1762091796 source:d:\snakegame\game\quest_screen.cpp
 	"quest_screen.h"
 	<string>
+
+1762101054 source:d:\snakegame\game\score.cpp
+	"score.h"
+	<iostream>
 
