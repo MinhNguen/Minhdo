@@ -125,21 +125,27 @@ public:
 
     void checkAchievements(int score, int coins, int maxCombo, int levelCompleted) {
         for (auto& ach : achievements) {
-            if (!ach.unlocked) {
-                bool shouldUnlock = false;
-                if (ach.type == Achievement::SCORE) shouldUnlock = (score >= ach.requirement);
-                else if (ach.type == Achievement::COINS) shouldUnlock = (coins >= ach.requirement);
-                else if (ach.type == Achievement::COMBO) shouldUnlock = (maxCombo >= ach.requirement);
-                else if (ach.type == Achievement::LEVEL) shouldUnlock = (levelCompleted >= ach.requirement);
-                if (shouldUnlock) {
-                    ach.unlocked = true;
-                    unlockedThisSession.push_back(ach.id);
-                    notificationTimer = 180;
-                    currentNotification = ach.id;
-                }
+            // 1. Cập nhật tiến độ (progress) TRƯỚC
+            if (ach.type == Achievement::SCORE) {
+                // Dùng std::max để lưu điểm số cao nhất đạt được trong 1 lần chạy
+                ach.currentProgress = std::max(ach.currentProgress, score);
+            } else if (ach.type == Achievement::COINS) {
+                ach.currentProgress = coins; // `coins` là tổng số coin (player.totalCoins), nên gán thẳng
+            } else if (ach.type == Achievement::COMBO) {
+                ach.currentProgress = std::max(ach.currentProgress, maxCombo); // Lưu combo cao nhất
+            } else if (ach.type == Achievement::LEVEL) {
+                ach.currentProgress = std::max(ach.currentProgress, levelCompleted); // Lưu màn chơi cao nhất
+            }
+
+            // 2. Kiểm tra mở khóa (unlock) SAU
+            if (!ach.unlocked && ach.currentProgress >= ach.requirement) {
+                ach.unlocked = true;
+                unlockedThisSession.push_back(ach.id);
+                notificationTimer = 180;
+                currentNotification = ach.id;
+                saveProgress(); // Lưu ngay khi mở khóa
             }
         }
-        saveProgress();
     }
 
     void update() { if (notificationTimer > 0) notificationTimer--; }
@@ -159,11 +165,51 @@ public:
 
     void saveProgress() {
         std::ofstream file("achievements.dat");
-        if (file.is_open()) { for (const auto& ach : achievements) file << ach.unlocked << " "; file.close(); }
+        if (file.is_open()) {
+            // Ghi số lượng thành tích để tải dễ dàng hơn
+            file << achievements.size() << "\n";
+            for (const auto& ach : achievements) {
+                // Ghi tất cả dữ liệu trên một dòng, cách nhau bằng dấu cách
+                file << ach.id << " "
+                     << ach.unlocked << " "
+                     << ach.rewardClaimed << " "
+                     << ach.currentProgress << "\n";
+            }
+            file.close();
+        }
     }
     void loadProgress() {
         std::ifstream file("achievements.dat");
-        if (file.is_open()) { for (auto& ach : achievements) file >> ach.unlocked; file.close(); }
+        if (!file.is_open()) return; // Không có tệp lưu, dùng giá trị mặc định
+
+        int count = 0;
+        file >> count; // Đọc số lượng thành tích đã lưu
+        if (file.fail() || count == 0) {
+            file.close();
+            return; // Tệp rỗng hoặc bị lỗi
+        }
+
+        for (int i = 0; i < count; ++i) {
+            int id;
+            bool unlocked;
+            bool rewardClaimed;
+            int currentProgress;
+
+            // Đọc dữ liệu từ tệp
+            file >> id >> unlocked >> rewardClaimed >> currentProgress;
+            if (file.fail()) break; // Dừng nếu đọc lỗi
+
+            // Tìm thành tích trong danh sách `achievements` bằng ID và cập nhật
+            for (auto& ach : achievements) {
+                if (ach.id == id) {
+                    ach.unlocked = unlocked;
+                    ach.rewardClaimed = rewardClaimed;
+                    ach.currentProgress = currentProgress;
+                    break; // Đã tìm thấy, chuyển sang dòng tiếp theo
+                }
+            }
+        }
+        file.close();
     }
     int getTotalRewardsEarned() {
         int total = 0;
@@ -171,6 +217,10 @@ public:
         return total;
     }
     void clearSessionRewards() { unlockedThisSession.clear(); }
+    void resetAchievements() {
+        initializeAchievements();
+        saveProgress();
+    }
 };
 
 // ===================== Dynamic Difficulty System =====================

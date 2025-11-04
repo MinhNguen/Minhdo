@@ -140,6 +140,11 @@ void AchievementScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Fo
     SDL_RenderFillRect(renderer, &backBtn);
     renderCenteredText(renderer, fontMedium, "BACK", white, backBtn.y + 10, screenW);
 
+    SDL_Rect resetBtn = {screenW - 130, screenH - 70, 120, 50};
+    SDL_SetRenderDrawColor(renderer, 180, 100, 0, 255); // Màu cam đậm
+    SDL_RenderFillRect(renderer, &resetBtn);
+    renderCenteredText(renderer, fontSmall, "RESET ALL", white, resetBtn.y + 15, resetBtn.x + resetBtn.w / 2);
+
     // Render Particles
     for (auto& p : particles) {
         p.render(renderer);
@@ -199,6 +204,12 @@ bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem
         SDL_Rect backBtn = {screenW / 2 - 100, 530, 200, 50}; // Giả định screenH là 600
         if (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h) {
             return true; // Thoát màn hình achievement
+        }
+
+        SDL_Rect resetBtn = {screenW - 130, 530, 120, 50};
+        if (mx >= resetBtn.x && mx <= resetBtn.x + resetBtn.w && my >= resetBtn.y && my <= resetBtn.y + resetBtn.h) {
+            achievementSystem.resetAchievements(); // Gọi hàm reset
+            return false; // Không thoát màn hình, chỉ reset
         }
 
         // Tab clicks

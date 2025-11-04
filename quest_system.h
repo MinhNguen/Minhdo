@@ -50,8 +50,9 @@ public:
     }
 
     void updateQuests() {
-        for (auto& quest : dailyQuests) if (quest.isActive && !quest.isCompleted) updateQuestProgress(quest);
-        for (auto& quest : mainQuests) if (quest.isActive && !quest.isCompleted) updateQuestProgress(quest);
+        for (auto& quest : dailyQuests) if (!quest.isCompleted) updateQuestProgress(quest);
+        for (auto& quest : mainQuests) if (!quest.isCompleted) updateQuestProgress(quest);
+
         if (notificationTimer > 0) notificationTimer--;
     }
 
@@ -141,6 +142,22 @@ public:
         for(const auto& q : dailyQuests) if(q.isCompleted) count++;
         for(const auto& q : mainQuests) if(q.isCompleted) count++;
         return count;
+    }
+
+    void resetMainQuests() {
+        // Tái tạo lại danh sách Main Quests ban đầu và reset trạng thái
+        mainQuests = {
+            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50),
+            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75)
+        };
+        for (auto& quest : mainQuests) {
+             // Reset trạng thái
+             quest.isActive = false; // Mặc dù không còn dùng, reset vẫn tốt
+             quest.isCompleted = false;
+             quest.rewardClaimed = false;
+             quest.currentProgress = 0;
+        }
+        std::cout << "Main Quests have been reset." << std::endl;
     }
 };
 

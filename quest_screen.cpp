@@ -65,10 +65,20 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
     bool isMain = (currentTab == MAIN);
     SDL_Color mainColor = isMain ? SDL_Color{100, 180, 255, 255} : SDL_Color{120, 120, 120, 200};
     uiRenderer.renderEnhancedButton(mainTab, hovMain || isMain, "MAIN QUESTS", fontTiny, mainColor);
+    SDL_FRect dailyResetBtn = {50, 140, 300, 45};
+    SDL_FRect mainResetBtn = {400, 140, 300, 45};
+
+    bool hovDailyReset = (mx >= dailyResetBtn.x && mx <= dailyResetBtn.x + dailyResetBtn.w &&
+                          my >= dailyResetBtn.y && my <= dailyResetBtn.y + dailyResetBtn.h);
+    uiRenderer.renderEnhancedButton(dailyResetBtn, hovDailyReset, "FORCE DAILY RESET", fontTiny, {200, 100, 0, 255});
+
+    bool hovMainReset = (mx >= mainResetBtn.x && mx <= mainResetBtn.x + mainResetBtn.w &&
+                         my >= mainResetBtn.y && my <= mainResetBtn.y + mainResetBtn.h);
+    uiRenderer.renderEnhancedButton(mainResetBtn, hovMainReset, "RESET MAIN QUESTS", fontTiny, {180, 50, 50, 255});
 
     // Render quests with enhanced panels
     std::vector<Quest>& quests = (currentTab == DAILY) ? questSystem.dailyQuests : questSystem.mainQuests;
-    int startY = 140, questHeight = 100, spacing = 10;
+    int startY = 195, questHeight = 100, spacing = 10;
 
     for (size_t i = 0; i < quests.size(); i++) {
         Quest& quest = quests[i];
@@ -118,6 +128,7 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
         uiRenderer.renderTextLeft(rewardText, questRect.x + 15, questRect.y + 82, fontTiny, orange);
 
         // Status button with enhanced style
+        // Status button with enhanced style
         SDL_FRect statusBtn = {questRect.x + questRect.w - 125, questRect.y + 12, 110, 35};
         bool hovStatus = (mx >= statusBtn.x && mx <= statusBtn.x + statusBtn.w &&
                          my >= statusBtn.y && my <= statusBtn.y + statusBtn.h);
@@ -131,12 +142,9 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
         } else if (quest.isCompleted) {
             btnColor = {255, 200, 0, 255};
             btnText = "CLAIM";
-        } else if (quest.isActive) {
-            btnColor = {0, 150, 0, 255};
-            btnText = "ACTIVE";
         } else {
-            btnColor = {70, 100, 200, 255};
-            btnText = "START";
+            btnColor = {0, 150, 0, 255};
+            btnText = "IN PROGRESS";
         }
 
         uiRenderer.renderEnhancedButton(statusBtn, hovStatus, btnText, fontTiny, btnColor);
@@ -171,9 +179,23 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
         return false;
     }
 
+    SDL_Rect dailyResetBtn = {50, 140, 300, 45};
+    if (mx >= dailyResetBtn.x && mx <= dailyResetBtn.x + dailyResetBtn.w && my >= dailyResetBtn.y && my <= dailyResetBtn.y + dailyResetBtn.h) {
+        questSystem.resetDailyQuests();
+        questSystem.saveProgress();
+        return false; // Không thoát màn hình
+    }
+
+    SDL_Rect mainResetBtn = {400, 140, 300, 45};
+    if (mx >= mainResetBtn.x && mx <= mainResetBtn.x + mainResetBtn.w && my >= mainResetBtn.y && my <= mainResetBtn.y + mainResetBtn.h) {
+        questSystem.resetMainQuests();
+        questSystem.saveProgress();
+        return false; // Không thoát màn hình
+    }
+
     // Quest interaction
     std::vector<Quest>& quests = (currentTab == DAILY) ? questSystem.dailyQuests : questSystem.mainQuests;
-    int startY = 140, questHeight = 100, spacing = 10;
+    int startY = 195, questHeight = 100, spacing = 10;
 
     for (size_t i = 0; i < quests.size(); i++) {
         Quest& quest = quests[i];
@@ -186,10 +208,6 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
                 player.totalCoins += quest.coinReward;
                 player.addXp(quest.xpReward);
                 quest.rewardClaimed = true;
-                questSystem.saveProgress();
-            } else if (!quest.isActive && !quest.isCompleted) {
-                // Start/Activate quest
-                questSystem.activateQuest(quest.id, currentTab == DAILY);
                 questSystem.saveProgress();
             }
             break;
