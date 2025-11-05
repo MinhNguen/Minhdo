@@ -1,7 +1,6 @@
 #include "obstacle.h"
 #include <iostream>
 
-// ===================== OBSTACLE CLASS IMPLEMENTATION =====================
 
 Obstacle::Obstacle(int startX, int groundY, int obstacleSpeed, ObstacleType obsType) {
     speed = obstacleSpeed;
