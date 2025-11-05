@@ -486,7 +486,7 @@
 	"player.h"
 	"score.h"
 
-1762317172 d:\snakegame\game\combo_achievement.h
+1762353585 d:\snakegame\game\combo_achievement.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -524,7 +524,7 @@
 	"player.h"
 	"ui_renderer.h"
 
-1762317762 d:\snakegame\game\achievement_screen.h
+1762352579 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	"combo_achievement.h"
@@ -569,14 +569,15 @@
 	<vector>
 	<cmath>
 
-1762319839 source:d:\snakegame\game\game.cpp
+1762356560 source:d:\snakegame\game\game.cpp
 	"game.h"
 	<iostream>
 	<fstream>
 
-1762157192 d:\snakegame\game\game.h
+1762356560 d:\snakegame\game\game.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
+	<SDL2/SDL_mixer.h>
 	<string>
 	<vector>
 	<functional>
@@ -605,4 +606,13 @@
 1762101054 source:d:\snakegame\game\score.cpp
 	"score.h"
 	<iostream>
+
+1762355981 d:\sdl2_mixer-2.8.1\x86_64-w64-mingw32\include\sdl2\sdl_mixer.h
+	"SDL_stdinc.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_endian.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
 

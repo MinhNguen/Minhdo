@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <string>
 #include <vector>
 #include <functional>
@@ -70,6 +71,7 @@ private:
     TTF_Font* fontMedium;
     TTF_Font* fontSmall;
     TTF_Font* fontTiny;
+    Mix_Music* backgroundMusic;
 
     // Game systems
     Player player;
@@ -96,6 +98,7 @@ private:
     GameState state;
     bool running;
     bool gameOver;
+    bool musicPlaying;
 
     // Screen dimensions
     const int SCREEN_WIDTH;

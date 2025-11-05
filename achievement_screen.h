@@ -16,9 +16,9 @@ struct AchievementParticle {
     int lifetime, maxLifetime;
     float size;
 
-    AchievementParticle(float px, float py); // Khai báo Constructor
-    void update(); // Khai báo Phương thức
-    void render(SDL_Renderer* renderer); // Khai báo Phương thức
+    AchievementParticle(float px, float py);
+    void update();
+    void render(SDL_Renderer* renderer);
 };
 
 class AchievementScreen {
@@ -26,20 +26,16 @@ public:
     AchievementTab currentTab;
     std::vector<AchievementParticle> particles;
 
-    AchievementScreen(); // Khai báo Constructor
-
-    // Khai báo các phương thức
+    AchievementScreen();
     void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontMedium, TTF_Font* fontSmall,
                 int screenW, int screenH, AchievementSystem& achievementSystem, Player& player);
 
-    // [SỬA] Thêm QuestSystem& vào hàm handleInput
     bool handleInput(SDL_Event& e, int screenW, int screenH, AchievementSystem& achievementSystem, QuestSystem& questSystem, Player& player);
 
     void updateParticles();
     void triggerParticleBurst(float x, float y, int count);
 
 private:
-    // [SỬA] Cập nhật tham số của hàm helper
     void renderAchievementList(SDL_Renderer* renderer, TTF_Font* fontMedium, TTF_Font* fontSmall,
                                int startY, int screenW, const std::vector<Achievement*>& achievements,
                                AchievementSystem& achievementSystem, Player& player);

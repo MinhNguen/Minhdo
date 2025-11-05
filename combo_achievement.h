@@ -8,7 +8,6 @@
 #include <fstream>
 #include "player.h"
 
-// ===================== Combo System =====================
 class ComboSystem {
 public:
     int currentCombo, maxCombo, comboTimer, comboTimeout, comboPopTimer;
@@ -75,12 +74,10 @@ struct Achievement {
     int requirement;
     int currentProgress;
 
-    // Constructor để cho phép khởi tạo bằng danh sách khởi tạo tường minh
     Achievement(int qid, const std::string& n, const std::string& desc, int coins, Type qtype, int req)
         : id(qid), name(n), description(desc), unlocked(false), rewardClaimed(false),
           reward(coins), type(qtype), requirement(req), currentProgress(0) {}
 
-    // Constructor mặc định (cần thiết cho std::vector)
     Achievement() : id(0), name(""), description(""), unlocked(false), rewardClaimed(false),
           reward(0), type(SCORE), requirement(0), currentProgress(0) {}
 };
@@ -98,44 +95,34 @@ public:
     }
 
     void initializeAchievements() {
-        // [SỬA] Mở rộng đáng kể danh sách thành tích
         achievements = {
-            // Loại: Điểm số (SCORE)
             {0, "First Steps", "Score 50 points", 20, Achievement::SCORE, 50},
             {1, "Century", "Score 100 points", 50, Achievement::SCORE, 100},
             {2, "High Scorer", "Score 200 points", 100, Achievement::SCORE, 200},
             {3, "Pro Gamer", "Score 500 points", 250, Achievement::SCORE, 500},
-            {100, "Legendary", "Score 1000 points", 500, Achievement::SCORE, 1000}, // Rare (reward >= 500)
+            {100, "Legendary", "Score 1000 points", 500, Achievement::SCORE, 1000},
 
-            // Loại: Tiền (COINS) - Giả định đây là TỔNG tiền tích lũy
             {4, "Coin Collector", "Collect 50 coins", 30, Achievement::COINS, 50},
             {5, "Getting Rich", "Collect 200 coins", 75, Achievement::COINS, 200},
             {6, "Wealthy", "Collect 500 coins", 150, Achievement::COINS, 500},
-            {101, "Millionaire", "Collect 1000 coins", 500, Achievement::COINS, 1000}, // Rare
+            {101, "Millionaire", "Collect 1000 coins", 500, Achievement::COINS, 1000},
 
-            // Loại: Combo (COMBO)
             {7, "Combo Starter", "Reach 10x combo", 50, Achievement::COMBO, 10},
             {8, "Combo Master", "Reach 20x combo", 150, Achievement::COMBO, 20},
-            {102, "Untouchable", "Reach 30x combo", 500, Achievement::COMBO, 30}, // Rare
+            {102, "Untouchable", "Reach 30x combo", 500, Achievement::COMBO, 30},
 
-            // Loại: Hoàn thành màn chơi (LEVEL) - Giả định đây là TỔNG số màn chơi đã qua
             {10, "Explorer", "Complete Level 2", 75, Achievement::LEVEL, 2},
             {11, "Adventurer", "Complete Level 3", 100, Achievement::LEVEL, 3},
             {12, "Conqueror", "Complete Level 5", 250, Achievement::LEVEL, 5},
-            {103, "World Wanderer", "Complete Level 10", 600, Achievement::LEVEL, 10} // Rare
+            {103, "World Wanderer", "Complete Level 10", 600, Achievement::LEVEL, 10}
         };
     }
 
-    // [THÊM] HÀM MỚI: Lấy 3 thành tích để hiển thị
     std::vector<Achievement*> getDisplayAchievements(AchievementTab currentTab) {
         std::vector<Achievement*> displayList;
-
-        // Helper lambda 1: Kiểm tra xem có hiếm (rare) không
         auto isRare = [](const Achievement& ach) {
-            return ach.reward >= 500; // Định nghĩa "Rare" là thưởng >= 500
+            return ach.reward >= 500;
         };
-
-        // Helper lambda 2: Kiểm tra xem có khớp với tab đang chọn không
         auto matchesTab = [&](const Achievement& ach) {
             switch(currentTab) {
                 case AchievementTab::ALL:      return true;
@@ -146,13 +133,13 @@ public:
             return false;
         };
 
-        // Helper lambda 3: Kiểm tra xem đã có trong danh sách hiển thị chưa
+
         auto isAdded = [&](int achId) {
             for(auto* p : displayList) if(p->id == achId) return true;
             return false;
         };
 
-        // Ưu tiên 1: Đã mở khóa, CHƯA nhận (Claimable)
+
         for (auto& ach : achievements) {
             if (ach.unlocked && !ach.rewardClaimed && matchesTab(ach)) {
                 displayList.push_back(&ach);
@@ -160,7 +147,6 @@ public:
             }
         }
 
-        // Ưu tiên 2: CHƯA mở khóa (In-Progress)
         for (auto& ach : achievements) {
             if (!ach.unlocked && matchesTab(ach) && !isAdded(ach.id)) {
                 displayList.push_back(&ach);
@@ -168,7 +154,7 @@ public:
             }
         }
 
-        // Ưu tiên 3: Đã mở khóa, ĐÃ nhận (Claimed)
+
         for (auto& ach : achievements) {
             if (ach.unlocked && ach.rewardClaimed && matchesTab(ach) && !isAdded(ach.id)) {
                 displayList.push_back(&ach);
@@ -176,7 +162,7 @@ public:
             }
         }
 
-        return displayList; // Trả về (có thể ít hơn 3)
+        return displayList;
     }
 
     void claimReward(int achievementId, Player& player) {
@@ -202,25 +188,22 @@ public:
 
     void checkAchievements(int score, int coins, int maxCombo, int levelCompleted) {
         for (auto& ach : achievements) {
-            // 1. Cập nhật tiến độ (progress) TRƯỚC
             if (ach.type == Achievement::SCORE) {
-                // Dùng std::max để lưu điểm số cao nhất đạt được trong 1 lần chạy
                 ach.currentProgress = std::max(ach.currentProgress, score);
             } else if (ach.type == Achievement::COINS) {
-                ach.currentProgress = coins; // `coins` là tổng số coin (player.totalCoins), nên gán thẳng
+                ach.currentProgress = coins;
             } else if (ach.type == Achievement::COMBO) {
-                ach.currentProgress = std::max(ach.currentProgress, maxCombo); // Lưu combo cao nhất
+                ach.currentProgress = std::max(ach.currentProgress, maxCombo);
             } else if (ach.type == Achievement::LEVEL) {
-                ach.currentProgress = std::max(ach.currentProgress, levelCompleted); // Lưu màn chơi cao nhất
+                ach.currentProgress = std::max(ach.currentProgress, levelCompleted);
             }
 
-            // 2. Kiểm tra mở khóa (unlock) SAU
             if (!ach.unlocked && ach.currentProgress >= ach.requirement) {
                 ach.unlocked = true;
                 unlockedThisSession.push_back(ach.id);
                 notificationTimer = 180;
                 currentNotification = ach.id;
-                saveProgress(); // Lưu ngay khi mở khóa
+                saveProgress();
             }
         }
     }
@@ -236,17 +219,14 @@ public:
             int boxW = 400, boxH = 100, boxX = screenWidth/2-boxW/2, boxY = 50;
             SDL_SetRenderDrawColor(renderer, 255, 215, 0, 240);
             SDL_Rect bg = {boxX, boxY, boxW, boxH}; SDL_RenderFillRect(renderer, &bg);
-            // Text rendering here
         }
     }
 
     void saveProgress() {
         std::ofstream file("achievements.dat");
         if (file.is_open()) {
-            // Ghi số lượng thành tích để tải dễ dàng hơn
             file << achievements.size() << "\n";
             for (const auto& ach : achievements) {
-                // Ghi tất cả dữ liệu trên một dòng, cách nhau bằng dấu cách
                 file << ach.id << " "
                      << ach.unlocked << " "
                      << ach.rewardClaimed << " "
@@ -257,13 +237,13 @@ public:
     }
     void loadProgress() {
         std::ifstream file("achievements.dat");
-        if (!file.is_open()) return; // Không có tệp lưu, dùng giá trị mặc định
+        if (!file.is_open()) return;
 
         int count = 0;
-        file >> count; // Đọc số lượng thành tích đã lưu
+        file >> count;
         if (file.fail() || count == 0) {
             file.close();
-            return; // Tệp rỗng hoặc bị lỗi
+            return;
         }
 
         for (int i = 0; i < count; ++i) {
@@ -272,17 +252,14 @@ public:
             bool rewardClaimed;
             int currentProgress;
 
-            // Đọc dữ liệu từ tệp
             file >> id >> unlocked >> rewardClaimed >> currentProgress;
-            if (file.fail()) break; // Dừng nếu đọc lỗi
-
-            // Tìm thành tích trong danh sách `achievements` bằng ID và cập nhật
+            if (file.fail()) break;
             for (auto& ach : achievements) {
                 if (ach.id == id) {
                     ach.unlocked = unlocked;
                     ach.rewardClaimed = rewardClaimed;
                     ach.currentProgress = currentProgress;
-                    break; // Đã tìm thấy, chuyển sang dòng tiếp theo
+                    break;
                 }
             }
         }
@@ -300,7 +277,6 @@ public:
     }
 };
 
-// ===================== Dynamic Difficulty System =====================
 class DifficultyManager {
 public:
     int survivalTime;

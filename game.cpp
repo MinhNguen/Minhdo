@@ -74,7 +74,7 @@ Game::Game(int width, int height)
     : SCREEN_WIDTH(width), SCREEN_HEIGHT(height), GROUND_Y(380),
       window(nullptr), renderer(nullptr),
       fontBig(nullptr), fontMedium(nullptr), fontSmall(nullptr), fontTiny(nullptr),
-      uiRenderer(nullptr),
+      backgroundMusic(nullptr), uiRenderer(nullptr),
       obstacleManager(GROUND_Y, 6, SCREEN_WIDTH),
       scoreManager(GROUND_Y, 6, SCREEN_WIDTH),
       powerUpManager(GROUND_Y, 6, SCREEN_WIDTH),
@@ -82,7 +82,7 @@ Game::Game(int width, int height)
       dayNightCycle(0.0008f),
       state(GameState::MENU),
       running(true),
-      gameOver(false) {
+      gameOver(false), musicPlaying(false) {
 
     player.groundY = GROUND_Y;
     player.y = GROUND_Y;
@@ -94,13 +94,30 @@ Game::~Game() {
 }
 
 bool Game::initialize() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     if (TTF_Init() != 0) {
         std::cerr << "TTF_Init Error: " << TTF_GetError() << std::endl;
+        SDL_Quit();
+        return false;
+    }
+
+    if (Mix_Init(MIX_INIT_MP3) != MIX_INIT_MP3) {
+        std::cerr << "Mix_Init Error: " << Mix_GetError() << std::endl;
+        IMG_Quit();
+        TTF_Quit();
+        SDL_Quit();
+        return false;
+    }
+
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "Mix_OpenAudio Error: " << Mix_GetError() << std::endl;
+        Mix_Quit();
+        IMG_Quit();
+        TTF_Quit();
         SDL_Quit();
         return false;
     }
@@ -145,6 +162,11 @@ bool Game::initialize() {
         return false;
     }
 
+    backgroundMusic = Mix_LoadMUS("image/music.mp3");
+    if (!backgroundMusic) {
+        std::cerr << "Failed to load music (music.mp3)! Error: " << Mix_GetError() << std::endl;
+    }
+
     uiRenderer = UIRenderer(renderer);
     shop.initialize(renderer);
     loadProgress();
@@ -163,6 +185,17 @@ void Game::run() {
     while (running) {
         uiRenderer.update();
         handleEvents();
+        if (state == GameState::PLAYING && !gameOver && !musicPlaying) {
+            if (backgroundMusic) {
+                Mix_PlayMusic(backgroundMusic, -1); // -1 để lặp vô tận
+            }
+            musicPlaying = true;
+        }
+        else if ((state != GameState::PLAYING || gameOver) && musicPlaying) {
+            Mix_HaltMusic(); // Dừng nhạc
+            musicPlaying = false;
+        }
+
         update();
         render();
         SDL_Delay(16);
@@ -641,9 +674,6 @@ void Game::renderPlaying() {
     renderLeftText(fontTiny, "Coins: " + std::to_string(player.totalCoins), yellow, SCREEN_WIDTH - 150, 10);
     renderLeftText(fontTiny, "Lvl " + std::to_string(player.level) + " (XP: " + std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")", white, SCREEN_WIDTH - 150, 30);
 
-    achievementSystem.render(renderer, fontMedium, fontSmall, SCREEN_WIDTH, SCREEN_HEIGHT);
-    questSystem.renderNotification(renderer, fontSmall, SCREEN_WIDTH);
-
     if (state == GameState::GAME_OVER) {
         // Dark overlay
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -846,6 +876,13 @@ void Game::renderLeftText(TTF_Font* font, const std::string& text, SDL_Color col
 void Game::cleanup() {
     saveProgress();
     shop.cleanup();
+
+    if (backgroundMusic) {
+        Mix_FreeMusic(backgroundMusic);
+        backgroundMusic = nullptr;
+    }
+    Mix_CloseAudio();
+    Mix_Quit();
 
     if (fontBig) TTF_CloseFont(fontBig);
     if (fontMedium) TTF_CloseFont(fontMedium);
