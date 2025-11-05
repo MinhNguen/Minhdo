@@ -326,10 +326,9 @@ void Game::handleQuestInput(SDL_Event& e) {
 }
 
 void Game::handleAchievementInput(SDL_Event& e) {
-    if (achievementScreen.handleInput(e, SCREEN_WIDTH, achievementSystem, player)) {
+    if (achievementScreen.handleInput(e, SCREEN_WIDTH, SCREEN_HEIGHT, achievementSystem, player)) {
         state = GameState::MENU;
     }
-
     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
         state = GameState::MENU;
     }
@@ -384,7 +383,7 @@ void Game::update() {
         comboSystem.update();
         questSystem.onComboUpdate(comboSystem.currentCombo);
         questSystem.onSurvivalTimeUpdate();
-        questSystem.updateQuests();
+        questSystem.updateQuests(player);
         achievementSystem.update();
 
         achievementSystem.checkAchievements(scoreManager.getCurrentScore(),

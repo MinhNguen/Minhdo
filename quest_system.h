@@ -7,6 +7,8 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include<algorithm>
+#include "player.h"
 
 struct Quest {
     int id;
@@ -15,10 +17,12 @@ struct Quest {
     enum Type { COLLECT_COINS, REACH_SCORE, COMPLETE_LEVEL, COLLECT_POWERUPS, REACH_COMBO, SURVIVE_TIME, JUMP_COUNT, NO_DAMAGE } type;
     int requirement, currentProgress;
     int coinReward, xpReward;
+    bool isAccumulative;
 
-    Quest(int qid, const std::string& t, const std::string& desc, Type qtype, int req, int coins, int xp)
+    Quest(int qid, const std::string& t, const std::string& desc, Type qtype, int req, int coins, int xp, bool accumulative = false) // <-- THÊM VÀO CONSTRUCTOR
         : id(qid), title(t), description(desc), isCompleted(false), isActive(false), rewardClaimed(false),
-          type(qtype), requirement(req), currentProgress(0), coinReward(coins), xpReward(xp) {}
+          type(qtype), requirement(req), currentProgress(0), coinReward(coins), xpReward(xp),
+          isAccumulative(accumulative) {}
 
     float getProgressPercent() const { return requirement == 0 ? 0.0f : (float)currentProgress / requirement; }
     bool checkCompletion() { if (!isCompleted && currentProgress >= requirement) isCompleted = true; return isCompleted; }
@@ -45,27 +49,53 @@ public:
     }
 
     void initializeQuests() {
-        dailyQuests = { Quest(0, "Coin Collector", "Collect 50 coins", Quest::COLLECT_COINS, 50, 50, 25), Quest(1, "Score Hunter", "Reach 100 points", Quest::REACH_SCORE, 100, 40, 20) };
-        mainQuests = { Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50), Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75) };
+        dailyQuests = {
+            Quest(0, "Coin Collector", "Collect 50 coins", Quest::COLLECT_COINS, 50, 50, 25, false),
+            Quest(1, "Score Hunter", "Reach 100 points", Quest::REACH_SCORE, 100, 40, 20, false)
+        };
+        mainQuests = {
+            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50, false),
+            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75, true)
+        };
     }
 
-    void updateQuests() {
-        for (auto& quest : dailyQuests) if (!quest.isCompleted) updateQuestProgress(quest);
-        for (auto& quest : mainQuests) if (!quest.isCompleted) updateQuestProgress(quest);
+    void updateQuests(Player& player) {
+        for (auto& quest : dailyQuests) if (!quest.isCompleted) updateQuestProgress(quest, player);
+        for (auto& quest : mainQuests) if (!quest.isCompleted) updateQuestProgress(quest, player);
 
         if (notificationTimer > 0) notificationTimer--;
     }
 
-    void updateQuestProgress(Quest& quest) {
+    void updateQuestProgress(Quest& quest, Player& player) {
         switch (quest.type) {
-            case Quest::COLLECT_COINS: quest.currentProgress = sessionCoinsCollected; break;
-            case Quest::REACH_SCORE: quest.currentProgress = sessionScore; break;
-            case Quest::COLLECT_POWERUPS: quest.currentProgress = sessionPowerupsCollected; break;
-            case Quest::REACH_COMBO: quest.currentProgress = sessionMaxCombo; break;
-            case Quest::SURVIVE_TIME: quest.currentProgress = sessionSurvivalTime; break;
-            case Quest::JUMP_COUNT: quest.currentProgress = sessionJumpCount; break;
-            case Quest::COMPLETE_LEVEL: quest.currentProgress = sessionLevelsCompleted; break;
-            case Quest::NO_DAMAGE: quest.currentProgress = sessionNoDamage ? 1 : 0; break;
+            case Quest::COLLECT_COINS:
+                quest.currentProgress = quest.isAccumulative ? player.totalCoins : std::max(quest.currentProgress, sessionCoinsCollected);
+                break;
+            case Quest::REACH_SCORE:
+                quest.currentProgress = std::max(quest.currentProgress, sessionScore);
+                break;
+            case Quest::COLLECT_POWERUPS:
+                quest.currentProgress = std::max(quest.currentProgress, sessionPowerupsCollected);
+                break;
+            case Quest::REACH_COMBO:
+                quest.currentProgress = std::max(quest.currentProgress, sessionMaxCombo);
+                break;
+            case Quest::SURVIVE_TIME:
+                quest.currentProgress = std::max(quest.currentProgress, sessionSurvivalTime / 60);
+                break;
+            case Quest::JUMP_COUNT:
+                quest.currentProgress = std::max(quest.currentProgress, sessionJumpCount);
+                break;
+            case Quest::COMPLETE_LEVEL:
+                quest.currentProgress = std::max(quest.currentProgress, sessionLevelsCompleted);
+                break;
+            case Quest::NO_DAMAGE:
+                if (!sessionNoDamage) {
+                    quest.currentProgress = 0;
+                } else {
+                    quest.currentProgress = sessionScore;
+                }
+                break;
         }
         if (quest.checkCompletion() && !quest.rewardClaimed) showNotification("Quest Completed: " + quest.title);
     }
@@ -145,14 +175,11 @@ public:
     }
 
     void resetMainQuests() {
-        // Tái tạo lại danh sách Main Quests ban đầu và reset trạng thái
         mainQuests = {
-            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50),
-            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75)
+            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50, false), // Thêm 'false'
+            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75, true) // THÊM 'true'
         };
         for (auto& quest : mainQuests) {
-             // Reset trạng thái
-             quest.isActive = false; // Mặc dù không còn dùng, reset vẫn tốt
              quest.isCompleted = false;
              quest.rewardClaimed = false;
              quest.currentProgress = 0;

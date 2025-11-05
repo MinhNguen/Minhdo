@@ -31,7 +31,7 @@ public:
     // Khai báo các phương thức
     void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontMedium, TTF_Font* fontSmall,
                 int screenW, int screenH, AchievementSystem& achievementSystem, Player& player);
-    bool handleInput(SDL_Event& e, int screenW, AchievementSystem& achievementSystem, Player& player);
+    bool handleInput(SDL_Event& e, int screenW, int screenH, AchievementSystem& achievementSystem, Player& player);
     void updateParticles();
     void triggerParticleBurst(float x, float y, int count);
 

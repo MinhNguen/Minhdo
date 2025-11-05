@@ -105,7 +105,7 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
                                  fontTiny, {220, 220, 220, 255});
 
         // Progress Bar with enhanced style
-        if (quest.isActive && !quest.isCompleted) {
+        if (!quest.isCompleted) {
             SDL_FRect bgBar = {questRect.x + 15, questRect.y + 62, 200, 18};
             uiRenderer.drawRoundedRect(bgBar, 9, {50, 50, 50, 255});
 
@@ -183,14 +183,14 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
     if (mx >= dailyResetBtn.x && mx <= dailyResetBtn.x + dailyResetBtn.w && my >= dailyResetBtn.y && my <= dailyResetBtn.y + dailyResetBtn.h) {
         questSystem.resetDailyQuests();
         questSystem.saveProgress();
-        return false; // Kh�ng tho�t m�n h�nh
+        return false; // Không thoát màn hình
     }
 
     SDL_Rect mainResetBtn = {400, 140, 300, 45};
     if (mx >= mainResetBtn.x && mx <= mainResetBtn.x + mainResetBtn.w && my >= mainResetBtn.y && my <= mainResetBtn.y + mainResetBtn.h) {
         questSystem.resetMainQuests();
         questSystem.saveProgress();
-        return false; // Kh�ng tho�t m�n h�nh
+        return false; // Không thoát màn hình
     }
 
     // Quest interaction
@@ -200,7 +200,11 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
     for (size_t i = 0; i < quests.size(); i++) {
         Quest& quest = quests[i];
         int y = startY + i * (questHeight + spacing);
-        SDL_Rect statusBtn = {700, y + 10, 110, 35};
+
+        // [SỬA] Tọa độ X phải khớp với hàm render()
+        // Tọa độ render là: questRect.x (50) + questRect.w (700) - 125 = 625
+        // Tọa độ Y render là: questRect.y (y) + 12
+        SDL_Rect statusBtn = { 625, y + 12, 110, 35 }; // Tọa độ cũ: {700, y + 10, 110, 35}
 
         if (mx >= statusBtn.x && mx <= statusBtn.x + statusBtn.w && my >= statusBtn.y && my <= statusBtn.y + statusBtn.h) {
             if (quest.isCompleted && !quest.rewardClaimed) {

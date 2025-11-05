@@ -88,9 +88,9 @@ void AchievementScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Fo
 
     // Render tabs
     SDL_Rect allTab = {100, 95, 150, 50};
-    SDL_Rect lockedTab = {250, 95, 150, 50};
-    SDL_Rect unlockedTab = {400, 95, 200, 50};
-    SDL_Rect rareTab = {600, 95, 150, 50};
+    SDL_Rect lockedTab = {260, 95, 150, 50}; // Tăng X từ 250 -> 260
+    SDL_Rect unlockedTab = {420, 95, 150, 50}; // Tăng X từ 400 -> 420, Giảm W từ 200 -> 150
+    SDL_Rect rareTab = {580, 95, 150, 50};
 
     SDL_Color activeColor = {0, 120, 255, 255};
     SDL_Color inactiveColor = {50, 50, 50, 255};
@@ -140,10 +140,11 @@ void AchievementScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Fo
     SDL_RenderFillRect(renderer, &backBtn);
     renderCenteredText(renderer, fontMedium, "BACK", white, backBtn.y + 10, screenW);
 
+    // Nút RESET
     SDL_Rect resetBtn = {screenW - 130, screenH - 70, 120, 50};
     SDL_SetRenderDrawColor(renderer, 180, 100, 0, 255); // Màu cam đậm
     SDL_RenderFillRect(renderer, &resetBtn);
-    renderCenteredText(renderer, fontSmall, "RESET ALL", white, resetBtn.y + 15, resetBtn.x + resetBtn.w / 2);
+    renderText(renderer, fontSmall, "RESET ALL", white, resetBtn.x + 10, resetBtn.y + 15);
 
     // Render Particles
     for (auto& p : particles) {
@@ -196,27 +197,28 @@ void AchievementScreen::renderAchievementList(SDL_Renderer* renderer, TTF_Font* 
 
 
 // Định nghĩa Phương thức handleInput
-bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem& achievementSystem, Player& player) {
+bool AchievementScreen::handleInput(SDL_Event& e, int screenW, int screenH, AchievementSystem& achievementSystem, Player& player) {
     if (e.type == SDL_MOUSEBUTTONDOWN) {
         int mx = e.button.x, my = e.button.y;
 
-        // Nút Back
-        SDL_Rect backBtn = {screenW / 2 - 100, 530, 200, 50}; // Giả định screenH là 600
+        // Nút Back [SỬA VỊ TRÍ Y]
+        SDL_Rect backBtn = {screenW / 2 - 100, screenH - 70, 200, 50};
         if (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h) {
             return true; // Thoát màn hình achievement
         }
 
-        SDL_Rect resetBtn = {screenW - 130, 530, 120, 50};
+        // Nút Reset [SỬA VỊ TRÍ Y]
+        SDL_Rect resetBtn = {screenW - 130, screenH - 70, 120, 50};
         if (mx >= resetBtn.x && mx <= resetBtn.x + resetBtn.w && my >= resetBtn.y && my <= resetBtn.y + resetBtn.h) {
             achievementSystem.resetAchievements(); // Gọi hàm reset
             return false; // Không thoát màn hình, chỉ reset
         }
 
-        // Tab clicks
+        // Tab clicks [SỬA LẠI BỐ CỤC CHO KHỚP VỚI RENDER]
         SDL_Rect allTab = {100, 95, 150, 50};
-        SDL_Rect lockedTab = {250, 95, 150, 50};
-        SDL_Rect unlockedTab = {400, 95, 150, 50};
-        SDL_Rect rareTab = {600, 95, 150, 50};
+        SDL_Rect lockedTab = {260, 95, 150, 50};
+        SDL_Rect unlockedTab = {420, 95, 150, 50};
+        SDL_Rect rareTab = {580, 95, 150, 50};
 
         if (mx >= allTab.x && mx <= allTab.x + allTab.w && my >= allTab.y && my <= allTab.y + allTab.h)
             currentTab = ALL;
@@ -227,30 +229,50 @@ bool AchievementScreen::handleInput(SDL_Event& e, int screenW, AchievementSystem
         else if (mx >= rareTab.x && mx <= rareTab.x + rareTab.w && my >= rareTab.y && my <= rareTab.y + rareTab.h)
             currentTab = RARE;
 
-        // Xử lý Claim Reward (Phần này cần truy cập vào Player/QuestSystem/AchievementSystem)
+
+        // [SỬA LOGIC NHẬN THƯỞNG]
+        // Phải lặp qua danh sách đã lọc (giống hệt render)
+        // để 'currentY' đồng bộ với những gì người dùng thấy.
+
         int startY = 150, achHeight = 60, spacing = 10;
         int currentY = startY;
 
-        // Để đơn giản, ta lặp qua tất cả và kiểm tra vị trí button
+        // Lặp qua TẤT CẢ achievements
         for (auto& ach : achievementSystem.achievements) {
-            SDL_Rect rect = {50, currentY, screenW - 100, achHeight};
 
-            if (ach.unlocked && !achievementSystem.isRewardClaimed(ach.id)) {
-                SDL_Rect claimBtn = {rect.x + rect.w - 80, rect.y + 10, 70, 40};
+            // 1. ÁP DỤNG BỘ LỌC (GIỐNG HỆT HÀM RENDER)
+            bool isRare = (ach.reward >= 500);
+            bool shouldRender = false;
 
-                if (mx >= claimBtn.x && mx <= claimBtn.x + claimBtn.w && my >= claimBtn.y && my <= claimBtn.y + claimBtn.h) {
-                    // 1. Gọi phương thức nhận thưởng
-                    achievementSystem.claimReward(ach.id, player);
+            if (currentTab == ALL) shouldRender = true;
+            else if (currentTab == LOCKED && !ach.unlocked) shouldRender = true;
+            else if (currentTab == UNLOCKED && ach.unlocked && !isRare) shouldRender = true;
+            else if (currentTab == RARE && ach.unlocked && isRare) shouldRender = true;
 
-                    // 2. Trigger hiệu ứng (nếu cần)
-                    triggerParticleBurst((float)claimBtn.x + claimBtn.w / 2, (float)claimBtn.y + claimBtn.h / 2, 20);
+            // 2. CHỈ XỬ LÝ INPUT VÀ TĂNG Y NẾU MỤC NÀY ĐƯỢC RENDER
+            if (shouldRender) {
+                SDL_Rect rect = {50, currentY, screenW - 100, achHeight};
 
-                    return false;
-                    std::cout << "Attempting to claim achievement: " << ach.name << std::endl;
-                    return false;
+                if (ach.unlocked && !achievementSystem.isRewardClaimed(ach.id)) {
+                    SDL_Rect claimBtn = {rect.x + rect.w - 80, rect.y + 10, 70, 40};
+
+                    if (mx >= claimBtn.x && mx <= claimBtn.x + claimBtn.w && my >= claimBtn.y && my <= claimBtn.y + claimBtn.h) {
+                        // 1. Gọi phương thức nhận thưởng
+                        achievementSystem.claimReward(ach.id, player);
+
+                        // 2. Trigger hiệu ứng
+                        triggerParticleBurst((float)claimBtn.x + claimBtn.w / 2, (float)claimBtn.y + claimBtn.h / 2, 20);
+
+                        // Xóa 'return false;' bị lặp và dead code ở dưới
+                        std::cout << "Attempting to claim achievement: " << ach.name << std::endl;
+                        return false;
+                    }
                 }
+
+                // Chỉ tăng Y nếu mục này được hiển thị
+                currentY += achHeight + spacing;
             }
-            currentY += achHeight + spacing;
+            // Không tăng Y nếu mục bị lọc
         }
     }
     return false;

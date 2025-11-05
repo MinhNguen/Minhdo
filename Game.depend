@@ -494,13 +494,15 @@
 	<fstream>
 	"player.h"
 
-1762269701 d:\snakegame\game\quest_system.h
+1762313270 d:\snakegame\game\quest_system.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
 	<vector>
 	<fstream>
 	<iostream>
+	<algorithm>
+	"player.h"
 
 1762157375 d:\snakegame\game\shop.h
 	<SDL2/SDL.h>
@@ -520,7 +522,7 @@
 	"player.h"
 	"ui_renderer.h"
 
-1762010759 d:\snakegame\game\achievement_screen.h
+1762313270 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	"combo_achievement.h"
@@ -551,7 +553,7 @@
 	"player.h"
 	"ui_renderer.h"
 
-1762270721 source:d:\snakegame\game\achievement_screen.cpp
+1762313270 source:d:\snakegame\game\achievement_screen.cpp
 	"achievement_screen.h"
 	<iostream>
 	<sstream>
@@ -593,7 +595,7 @@
 	"obstacle.h"
 	<iostream>
 
-1762270095 source:d:\snakegame\game\quest_screen.cpp
+1762313270 source:d:\snakegame\game\quest_screen.cpp
 	"quest_screen.h"
 	<string>
 

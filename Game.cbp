@@ -67,6 +67,7 @@
 		<Unit filename="quest_screen.h" />
 		<Unit filename="quest_system.cpp" />
 		<Unit filename="quest_system.h" />
+		<Unit filename="score.cpp" />
 		<Unit filename="score.h" />
 		<Unit filename="shop.h" />
 		<Unit filename="ui_renderer.h" />
