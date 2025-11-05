@@ -129,7 +129,6 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
 
     SDL_Rect mainBody = { x, y - height, width, height };
 
-    // Vẽ thân chính với gradient
     for (int i = 0; i < height; i++) {
         float ratio = (float)i / height;
         SDL_Color currentColor;
@@ -142,22 +141,17 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
         SDL_RenderDrawLine(renderer, x, y - height + i, x + width, y - height + i);
     }
 
-    // Vẽ các nhánh xương rồng tùy theo loại và biến thể
     std::vector<SDL_Rect> branches;
 
     if (type == CACTUS_SMALL) {
-        // Xương rồng nhỏ: 1-2 nhánh ngắn
         if (variant % 2 == 0) {
-            // Nhánh trái
             branches.push_back({x - width/2, y - height/2, width/2, height/3});
         }
         if (variant % 3 == 0) {
-            // Nhánh phải
             branches.push_back({x + width, y - height*2/3, width/2, height/4});
         }
     }
     else if (type == CACTUS_MEDIUM) {
-        // Xương rồng trung: 2-3 nhánh
         branches.push_back({x - width/2 + 2, y - height/2, width/2, height/3}); // Trái giữa
         branches.push_back({x + width - 2, y - height*3/4, width/2, height/4}); // Phải trên
 
@@ -166,7 +160,6 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
         }
     }
     else if (type == CACTUS_LARGE) {
-        // Xương rồng lớn: 3-4 nhánh phức tạp
         branches.push_back({x - width*2/3, y - height/2, width*2/3, height/3}); // Nhánh trái lớn
         branches.push_back({x + width, y - height*3/4, width/2, height/3});     // Nhánh phải trên
         branches.push_back({x + width*2/3, y - height/4, width/3, height/4});   // Nhánh phải dưới
@@ -176,9 +169,7 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
         }
     }
 
-    // Vẽ các nhánh
     for (const auto& branch : branches) {
-        // Gradient cho nhánh
         for (int i = 0; i < branch.h; i++) {
             float ratio = (float)i / branch.h;
             SDL_Color currentColor;
@@ -191,45 +182,34 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
             SDL_RenderDrawLine(renderer, branch.x, branch.y + i, branch.x + branch.w, branch.y + i);
         }
 
-        // Viền nhánh
         SDL_SetRenderDrawColor(renderer, 40, 100, 40, 255);
         SDL_RenderDrawRect(renderer, &branch);
     }
 
-    // Vẽ gai/xương cho thân chính và các nhánh
     SDL_SetRenderDrawColor(renderer, spineColor.r, spineColor.g, spineColor.b, 255);
 
-    // Gai trên thân chính - tập trung ở các khớp
     for (int i = 0; i < height; i += 6) {
-        // Gai ngang
         SDL_RenderDrawLine(renderer, x - 3, y - height + i, x + width + 3, y - height + i);
 
-        // Gai dọc ở hai bên (mỗi 3 dòng)
         if (i % 12 == 0) {
-            // Trái
             for (int j = -2; j <= 2; j++) {
                 SDL_RenderDrawPoint(renderer, x - 2, y - height + i + j);
             }
-            // Phải
             for (int j = -2; j <= 2; j++) {
                 SDL_RenderDrawPoint(renderer, x + width + 1, y - height + i + j);
             }
         }
     }
 
-    // Vẽ gai cho các nhánh
     for (const auto& branch : branches) {
         for (int i = 0; i < branch.h; i += 5) {
-            // Gai ngang trên nhánh
             SDL_RenderDrawLine(renderer, branch.x - 2, branch.y + i,
                              branch.x + branch.w + 2, branch.y + i);
         }
     }
 
-    // Vẽ các cụm gai đặc biệt ở ngọn và khớp nhánh
     SDL_SetRenderDrawColor(renderer, 20, 60, 20, 255);
 
-    // Cụm gai ở ngọn thân chính
     for (int i = -2; i <= 2; i++) {
         for (int j = -2; j <= 2; j++) {
             if (abs(i) + abs(j) <= 3) { // Hình thoi
@@ -238,10 +218,8 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
         }
     }
 
-    // Cụm gai ở các khớp nhánh
     for (const auto& branch : branches) {
-        // Ở gốc nhánh (chỗ nối với thân)
-        int jointX = (branch.x < x) ? x : x + width; // Xác định bên trái hay phải
+        int jointX = (branch.x < x) ? x : x + width;
         int jointY = branch.y + branch.h/2;
 
         for (int i = -3; i <= 3; i++) {
@@ -253,11 +231,9 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
         }
     }
 
-    // Viền tổng thể cho thân chính
     SDL_SetRenderDrawColor(renderer, 40, 100, 40, 255);
     SDL_RenderDrawRect(renderer, &mainBody);
 
-    // Làm nổi bật các cạnh
     SDL_SetRenderDrawColor(renderer, 100, 200, 100, 100);
     SDL_RenderDrawLine(renderer, x + 1, y - height + 1, x + width - 1, y - height + 1); // Cạnh trên
     SDL_RenderDrawLine(renderer, x + 1, y - height + 1, x + 1, y - 1); // Cạnh trái
@@ -266,7 +242,6 @@ void Obstacle::renderCactus(SDL_Renderer* renderer) {
 void Obstacle::renderCactusGroup(SDL_Renderer* renderer) {
     SDL_Color cactusColor = {60, 140, 60, 255};
 
-    // Vẽ 2-3 cây xương rồng gần nhau
     int numCacti = 2 + (variant % 2); // 2 hoặc 3 cây
 
     for (int i = 0; i < numCacti; i++) {
@@ -294,35 +269,29 @@ void Obstacle::renderCactusGroup(SDL_Renderer* renderer) {
 void Obstacle::renderBird(SDL_Renderer* renderer) {
     SDL_Color birdColor;
 
-    // Màu sắc khác nhau cho chim
     switch (variant) {
         case 0: birdColor = {255, 100, 100, 255}; break; // Đỏ
         case 1: birdColor = {100, 100, 255, 255}; break; // Xanh
         case 2: birdColor = {255, 200, 100, 255}; break; // Vàng
     }
 
-    // Thân chim
     SDL_Rect body = { x, y - height/2, width, height/2 };
     SDL_SetRenderDrawColor(renderer, birdColor.r, birdColor.g, birdColor.b, 255);
     SDL_RenderFillRect(renderer, &body);
 
-    // Đầu chim
     SDL_Rect head = { x + width - 10, y - height, 15, 15 };
     SDL_RenderFillRect(renderer, &head);
 
-    // Cánh chim - di chuyển lên xuống
     int wingOffset = (int)(sin(trailTimer * 0.2f) * 5);
     SDL_Rect wing = { x + 5, y - height/2 - 10 + wingOffset, width - 10, 8 };
     SDL_SetRenderDrawColor(renderer, birdColor.r * 0.7f, birdColor.g * 0.7f, birdColor.b * 0.7f, 255);
     SDL_RenderFillRect(renderer, &wing);
 
-    // Mắt
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDrawPoint(renderer, x + width - 3, y - height + 5);
 }
 
 void Obstacle::renderMeteor(SDL_Renderer* renderer) {
-    // Hiệu ứng đuôi lửa
     if (trailTimer % 2 == 0) {
         for (int i = 1; i <= 4; i++) {
             int alpha = 255 - (i * 50);
@@ -339,12 +308,10 @@ void Obstacle::renderMeteor(SDL_Renderer* renderer) {
         }
     }
 
-    // Thân thiên thạch
     SDL_SetRenderDrawColor(renderer, 100, 100, 120, 255);
     SDL_Rect meteor = { x, y - height, width, height };
     SDL_RenderFillRect(renderer, &meteor);
 
-    // Bề mặt gồ ghề
     SDL_SetRenderDrawColor(renderer, 120, 120, 140, 255);
     for (int i = 0; i < 5; i++) {
         int craterX = x + 5 + (rand() % (width - 10));

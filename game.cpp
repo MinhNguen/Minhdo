@@ -672,7 +672,7 @@ void Game::renderPlaying() {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
 
     renderLeftText(fontTiny, "Coins: " + std::to_string(player.totalCoins), yellow, SCREEN_WIDTH - 150, 10);
-    renderLeftText(fontTiny, "Lvl " + std::to_string(player.level) + " (XP: " + std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")", white, SCREEN_WIDTH - 150, 30);
+    renderLeftText(fontTiny, "Lvl " + std::to_string(player.level), white, SCREEN_WIDTH - 150, 30);
 
     if (state == GameState::GAME_OVER) {
         // Dark overlay

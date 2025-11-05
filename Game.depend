@@ -506,7 +506,7 @@
 	<chrono>
 	"player.h"
 
-1762157375 d:\snakegame\game\shop.h
+1762358383 d:\snakegame\game\shop.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_image.h>
@@ -569,7 +569,7 @@
 	<vector>
 	<cmath>
 
-1762356560 source:d:\snakegame\game\game.cpp
+1762358383 source:d:\snakegame\game\game.cpp
 	"game.h"
 	<iostream>
 	<fstream>
@@ -599,7 +599,7 @@
 	"obstacle.h"
 	<iostream>
 
-1762316501 source:d:\snakegame\game\quest_screen.cpp
+1762358966 source:d:\snakegame\game\quest_screen.cpp
 	"quest_screen.h"
 	<string>
 

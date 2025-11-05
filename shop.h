@@ -35,20 +35,20 @@ public:
 
     void initialize(SDL_Renderer* renderer) {
         items.clear();
-        items.emplace_back(0, "Classic Dino", "The original dino", 0);
-        items.emplace_back(1, "Red Dragon", "Fierce red dragon", 100);
-        items.emplace_back(2, "Blue Raptor", "Fast blue raptor", 150);
-        items.emplace_back(3, "Golden Rex", "Legendary golden T-Rex", 300);
-        items.emplace_back(4, "Purple Ghost", "Mysterious ghost dino", 200);
-        items.emplace_back(5, "Green Turtle", "Slow but steady", 80);
-        items.emplace_back(6, "Rainbow Dino", "Colorful party dino", 500);
+        items.emplace_back(0, "Red Dragon", "Fierce red dragon", 100);
+        items.emplace_back(1, "Blue Raptor", "Fast blue raptor", 150);
+        items.emplace_back(2, "Golden Rex", "Legendary golden T-Rex", 300);
+        items.emplace_back(3, "Purple Ghost", "Mysterious ghost dino", 200);
+        items.emplace_back(4, "Green Turtle", "Slow but steady", 80);
+        items.emplace_back(5, "Rainbow Dino", "Colorful party dino", 500);
+
         items[0].isOwned = true;
         loadTextures(renderer);
     }
 
     void loadTextures(SDL_Renderer* renderer) {
-        const char* skinFiles[] = { "image/dino.png", "image/dino_red.png", "image/dino_blue.png", "image/dino_gold.png", "image/dino_purple.png", "image/dino_green.png", "image/dino_rainbow.png"};
-        SDL_Color skinColors[] = { {100,200,100,255}, {255,50,50,255}, {50,100,255,255}, {255,215,0,255}, {150,50,200,255}, {34,139,34,255}, {255,100,200,255} };
+        const char* skinFiles[] = { "image/dino_red.png", "image/dino_blue.png", "image/dino_gold.png", "image/dino_purple.png", "image/dino_green.png", "image/dino_pink.png"};
+        SDL_Color skinColors[] = { {255,50,50,255}, {50,100,255,255}, {255,215,0,255}, {150,50,200,255}, {34,139,34,255}, {255,100,200,255} };
 
         for (size_t i = 0; i < items.size(); i++) {
             items[i].texture = IMG_LoadTexture(renderer, skinFiles[i]);
@@ -103,10 +103,8 @@ public:
         SDL_FRect infoPanel = {20, 100, 760, 60};
         uiRenderer.drawEnhancedGlassPanel(infoPanel, {100, 50, 150, 160});
 
-        uiRenderer.renderTextLeft("Coins: " + std::to_string(player.totalCoins), 40, 115, fontSmall, orange);
-        uiRenderer.renderTextLeft("Level " + std::to_string(player.level) + " (XP: " +
-                                 std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")",
-                                 40, 145, fontTiny, white);
+        uiRenderer.renderTextLeft("Coins: " + std::to_string(player.totalCoins), 40, 105, fontSmall, orange);
+        uiRenderer.renderTextLeft("Level " + std::to_string(player.level), 40, 135, fontTiny, white);
 
         int mx, my;
         SDL_GetMouseState(&mx, &my);

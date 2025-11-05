@@ -130,13 +130,13 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
             // Progress text
             std::string progText = std::to_string(quest.currentProgress) + "/" +
                                   std::to_string(quest.requirement);
-            uiRenderer.renderTextLeft(progText, questRect.x + 225, questRect.y + 65, fontTiny, white);
+            uiRenderer.renderTextLeft(progText, questRect.x + 225, questRect.y + 60, fontTiny, white);
         }
 
         // Reward info
         std::string rewardText = "Reward: " + std::to_string(quest.coinReward) +
                                 " coins, " + std::to_string(quest.xpReward) + " XP";
-        uiRenderer.renderTextLeft(rewardText, questRect.x + 15, questRect.y + 82, fontTiny, orange);
+        uiRenderer.renderTextLeft(rewardText, questRect.x + 15, questRect.y + 70, fontTiny, orange);
 
         // Status button with enhanced style
         SDL_FRect statusBtn = {questRect.x + questRect.w - 125, questRect.y + 12, 110, 35};
@@ -161,7 +161,7 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
     }
 
     // Back button
-    SDL_FRect backBtn = {300, 420, 200, 50};
+    SDL_FRect backBtn = {300, 550, 200, 50};
     bool hovBack = (mx >= backBtn.x && mx <= backBtn.x + backBtn.w &&
                     my >= backBtn.y && my <= backBtn.y + backBtn.h);
     uiRenderer.renderEnhancedButton(backBtn, hovBack, "BACK", fontSmall, {180, 50, 50, 255});
@@ -172,7 +172,7 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
     int mx = e.button.x, my = e.button.y;
 
     // Back button
-    SDL_Rect backBtn = {300, 420, 200, 50};
+    SDL_Rect backBtn = {300, 550, 200, 50};
     if (mx >= backBtn.x && mx <= backBtn.x + backBtn.w && my >= backBtn.y && my <= backBtn.y + backBtn.h)
         return true;
 
