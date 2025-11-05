@@ -86,6 +86,7 @@ Game::Game(int width, int height)
 
     player.groundY = GROUND_Y;
     player.y = GROUND_Y;
+    player.totalLevelsCompleted = 0;
 }
 
 Game::~Game() {
@@ -326,7 +327,7 @@ void Game::handleQuestInput(SDL_Event& e) {
 }
 
 void Game::handleAchievementInput(SDL_Event& e) {
-    if (achievementScreen.handleInput(e, SCREEN_WIDTH, SCREEN_HEIGHT, achievementSystem, player)) {
+    if (achievementScreen.handleInput(e, SCREEN_WIDTH, SCREEN_HEIGHT, achievementSystem, questSystem, player)) {
         state = GameState::MENU;
     }
     if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
@@ -351,7 +352,7 @@ void Game::update() {
         mapTheme.update(SCREEN_WIDTH, SCREEN_HEIGHT, dayNightCycle);
 
         if (!player.isOnGround) player.vy += player.gravity;
-        player.y += player.vy;
+        player.y += 2*player.vy;
         if (player.y >= GROUND_Y) {
             player.y = GROUND_Y;
             player.vy = 0;
@@ -377,11 +378,15 @@ void Game::update() {
         for (auto& pu : powerUpManager.powerUps) {
             if (!pu.collected && pu.checkCollision(player.x, player.y, player.width, player.height)) {
                 questSystem.onPowerupCollected();
+                player.totalPowerupsCollected++;
             }
         }
 
         comboSystem.update();
         questSystem.onComboUpdate(comboSystem.currentCombo);
+        if (comboSystem.getMaxCombo() > player.bestComboAchieved) {
+            player.bestComboAchieved = comboSystem.getMaxCombo();
+        }
         questSystem.onSurvivalTimeUpdate();
         questSystem.updateQuests(player);
         achievementSystem.update();
@@ -398,6 +403,7 @@ void Game::update() {
             player.totalCoins += achievementSystem.getTotalRewardsEarned();
             achievementSystem.clearSessionRewards();
             questSystem.onLevelComplete();
+            player.totalLevelsCompleted++;
             saveProgress();
             state = GameState::LEVEL_COMPLETE;
         }
@@ -635,7 +641,6 @@ void Game::renderPlaying() {
     renderLeftText(fontTiny, "Coins: " + std::to_string(player.totalCoins), yellow, SCREEN_WIDTH - 150, 10);
     renderLeftText(fontTiny, "Lvl " + std::to_string(player.level) + " (XP: " + std::to_string(player.xp) + "/" + std::to_string(player.xpToNextLevel) + ")", white, SCREEN_WIDTH - 150, 30);
 
-    comboSystem.render(renderer, fontSmall, SCREEN_WIDTH);
     achievementSystem.render(renderer, fontMedium, fontSmall, SCREEN_WIDTH, SCREEN_HEIGHT);
     questSystem.renderNotification(renderer, fontSmall, SCREEN_WIDTH);
 
@@ -711,6 +716,10 @@ void Game::saveProgress() {
         file << player.level << "\n";
         file << player.xp << "\n";
         file << player.xpToNextLevel << "\n";
+        file << player.totalLevelsCompleted << "\n";
+        file << player.totalPowerupsCollected << "\n";
+        file << player.bestComboAchieved << "\n";
+
         for (const auto& item : shop.items) {
             file << item.isOwned << " ";
         }
@@ -736,6 +745,18 @@ void Game::loadProgress() {
     file >> player.level;
     file >> player.xp;
     file >> player.xpToNextLevel;
+    file >> player.totalLevelsCompleted;
+    file >> player.totalPowerupsCollected;
+    file >> player.bestComboAchieved;
+
+    // (Thêm kiểm tra file.fail() nếu cần, nhưng nếu tệp cũ thì các biến sẽ là 0)
+    if(file.fail()) {
+        player.totalPowerupsCollected = 0;
+        player.bestComboAchieved = 0;
+        // Xóa cờ lỗi để tiếp tục đọc phần còn lại của tệp
+        file.clear();
+    }
+
     for (auto& item : shop.items) {
         file >> item.isOwned;
     }

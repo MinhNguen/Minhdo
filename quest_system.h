@@ -7,7 +7,9 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include<algorithm>
+#include <algorithm>
+#include <random>
+#include <chrono>
 #include "player.h"
 
 struct Quest {
@@ -19,7 +21,7 @@ struct Quest {
     int coinReward, xpReward;
     bool isAccumulative;
 
-    Quest(int qid, const std::string& t, const std::string& desc, Type qtype, int req, int coins, int xp, bool accumulative = false) // <-- THÊM VÀO CONSTRUCTOR
+    Quest(int qid, const std::string& t, const std::string& desc, Type qtype, int req, int coins, int xp, bool accumulative = false)
         : id(qid), title(t), description(desc), isCompleted(false), isActive(false), rewardClaimed(false),
           type(qtype), requirement(req), currentProgress(0), coinReward(coins), xpReward(xp),
           isAccumulative(accumulative) {}
@@ -31,6 +33,9 @@ struct Quest {
 class QuestSystem {
 public:
     std::vector<Quest> dailyQuests, mainQuests;
+    std::vector<Quest> dailyQuestPool;
+    std::vector<Quest> mainQuestPool;
+
     int notificationTimer;
     std::string notificationText;
     int sessionCoinsCollected, sessionScore, sessionPowerupsCollected, sessionMaxCombo, sessionSurvivalTime, sessionJumpCount, sessionLevelsCompleted;
@@ -40,6 +45,10 @@ public:
         notificationTimer = 0;
         initializeQuests();
         resetSessionStats();
+
+        resetMainQuests(true);
+        resetDailyQuests(true);
+
         loadProgress();
     }
 
@@ -49,13 +58,30 @@ public:
     }
 
     void initializeQuests() {
-        dailyQuests = {
-            Quest(0, "Coin Collector", "Collect 50 coins", Quest::COLLECT_COINS, 50, 50, 25, false),
-            Quest(1, "Score Hunter", "Reach 100 points", Quest::REACH_SCORE, 100, 40, 20, false)
+        dailyQuestPool = {
+            Quest(0, "Thu Thập Nhanh", "Thu thập 50 xu trong 1 lần chạy", Quest::COLLECT_COINS, 50, 50, 25, false),
+            Quest(1, "Thợ Săn Điểm", "Đạt 100 điểm trong 1 lần chạy", Quest::REACH_SCORE, 100, 40, 20, false),
+            Quest(2, "Nhảy Nhót", "Nhảy 20 lần trong 1 lần chạy", Quest::JUMP_COUNT, 20, 30, 15, false),
+            Quest(3, "Tăng Lực", "Thu thập 3 vật phẩm hỗ trợ", Quest::COLLECT_POWERUPS, 3, 60, 30, false),
+            Quest(4, "Combo Ngắn", "Đạt 5x combo", Quest::REACH_COMBO, 5, 50, 25, false),
+            Quest(5, "Sinh Tồn", "Sống sót 1 phút (60s) trong 1 lần chạy", Quest::SURVIVE_TIME, 1, 40, 20, false),
+            Quest(6, "Tay Săn Xu", "Thu thập 100 xu trong 1 lần chạy", Quest::COLLECT_COINS, 100, 100, 50, false),
+            Quest(7, "Chuyên Gia Né Tránh", "Đạt 150 điểm mà không nhận sát thương", Quest::NO_DAMAGE, 150, 150, 75, false),
+            Quest(8, "Vua Combo", "Đạt 10x combo", Quest::REACH_COMBO, 10, 100, 50, false),
+            Quest(9, "Marathon Mini", "Sống sót 2 phút (120s)", Quest::SURVIVE_TIME, 2, 80, 40, false)
         };
-        mainQuests = {
-            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50, false),
-            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75, true)
+
+        // [SỬA] Mở rộng Main Quest Pool (tất cả đều là 'true' - tích lũy)
+        mainQuestPool = {
+            Quest(100, "Bước Đầu Tiên", "Hoàn thành 1 màn chơi (bất kỳ)", Quest::COMPLETE_LEVEL, 1, 75, 50, true),
+            Quest(101, "Giàu Có", "Thu thập tổng cộng 200 xu", Quest::COLLECT_COINS, 200, 150, 75, true),
+            Quest(102, "Chuyên Gia", "Hoàn thành tổng cộng 5 màn chơi", Quest::COMPLETE_LEVEL, 5, 200, 100, true),
+            Quest(103, "Triệu Phú Xu", "Thu thập tổng cộng 1000 xu", Quest::COLLECT_COINS, 1000, 500, 250, true),
+            // [THÊM]
+            Quest(104, "Nhà Sưu Tầm", "Thu thập tổng cộng 50 vật phẩm", Quest::COLLECT_POWERUPS, 50, 200, 100, true),
+            Quest(105, "Bậc Thầy Combo", "Đạt 20x combo (cao nhất)", Quest::REACH_COMBO, 20, 250, 150, true),
+            Quest(106, "Người Du Hành", "Hoàn thành tổng cộng 10 màn chơi", Quest::COMPLETE_LEVEL, 10, 400, 200, true),
+            Quest(107, "Kho Bạc", "Thu thập tổng cộng 5000 xu", Quest::COLLECT_COINS, 5000, 1000, 500, true)
         };
     }
 
@@ -75,10 +101,10 @@ public:
                 quest.currentProgress = std::max(quest.currentProgress, sessionScore);
                 break;
             case Quest::COLLECT_POWERUPS:
-                quest.currentProgress = std::max(quest.currentProgress, sessionPowerupsCollected);
+                quest.currentProgress = quest.isAccumulative ? player.totalPowerupsCollected : std::max(quest.currentProgress, sessionPowerupsCollected);
                 break;
             case Quest::REACH_COMBO:
-                quest.currentProgress = std::max(quest.currentProgress, sessionMaxCombo);
+                quest.currentProgress = quest.isAccumulative ? player.bestComboAchieved : std::max(quest.currentProgress, sessionMaxCombo);
                 break;
             case Quest::SURVIVE_TIME:
                 quest.currentProgress = std::max(quest.currentProgress, sessionSurvivalTime / 60);
@@ -87,7 +113,7 @@ public:
                 quest.currentProgress = std::max(quest.currentProgress, sessionJumpCount);
                 break;
             case Quest::COMPLETE_LEVEL:
-                quest.currentProgress = std::max(quest.currentProgress, sessionLevelsCompleted);
+                quest.currentProgress = quest.isAccumulative ? player.totalLevelsCompleted : std::max(quest.currentProgress, sessionLevelsCompleted);
                 break;
             case Quest::NO_DAMAGE:
                 if (!sessionNoDamage) {
@@ -122,21 +148,36 @@ public:
         }
     }
 
-    void resetDailyQuests() {
-        // Tái tạo lại danh sách Daily Quests ban đầu và reset trạng thái
-        dailyQuests = {
-            Quest(0, "Coin Collector", "Collect 50 coins", Quest::COLLECT_COINS, 50, 50, 25),
-            Quest(1, "Score Hunter", "Reach 100 points", Quest::REACH_SCORE, 100, 40, 20)
-        };
-        for (auto& quest : dailyQuests) {
-             // Reset trạng thái
-             quest.isActive = false;
-             quest.isCompleted = false;
-             quest.rewardClaimed = false;
-             quest.currentProgress = 0;
+    void resetDailyQuests(bool isInitialLoad = false) {
+        if (dailyQuestPool.empty()) return; // Không có gì để reset
+
+        // 1. Lưu tiến độ của các nhiệm vụ hàng ngày cũ trước khi xóa
+        if (!isInitialLoad) {
+            saveProgress();
         }
-        // Ghi chú: mainQuests là nhiệm vụ chính nên không bị reset hàng ngày.
-        std::cout << "Daily Quests have been reset." << std::endl;
+
+        dailyQuests.clear();
+
+        // 2. Thiết lập bộ sinh số ngẫu nhiên
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::mt19937 g(seed);
+
+        // 3. Tạo một danh sách các chỉ số (index) và xáo trộn chúng
+        std::vector<int> indices(dailyQuestPool.size());
+        for (size_t i = 0; i < indices.size(); ++i) indices[i] = i;
+        std::shuffle(indices.begin(), indices.end(), g);
+
+        // 4. Chọn 3 nhiệm vụ đầu tiên từ danh sách đã xáo trộn
+        int numToSelect = std::min(3, (int)dailyQuestPool.size()); // Chọn 3 hoặc ít hơn nếu pool nhỏ
+        for (int i = 0; i < numToSelect; ++i) {
+            dailyQuests.push_back(dailyQuestPool[indices[i]]); // Thêm BẢN SAO vào danh sách active
+        }
+
+        // 5. Lưu lại danh sách nhiệm vụ mới (rỗng)
+        if (!isInitialLoad) {
+            saveProgress();
+            std::cout << "Daily Quests have been reset with new random quests." << std::endl;
+        }
     }
 
     void saveProgress() {
@@ -154,9 +195,38 @@ public:
         if (!file.is_open()) return;
         int count;
         file >> count;
-        for (int i = 0; i < count; ++i) { int id; file >> id; for (auto& q : dailyQuests) if (q.id == id) file >> q.isActive >> q.isCompleted >> q.rewardClaimed >> q.currentProgress; }
+        // Đọc các nhiệm vụ hàng ngày đã lưu
+        for (int i = 0; i < count; ++i) {
+            int id;
+            bool isActive, isCompleted, rewardClaimed;
+            int currentProgress;
+            file >> id >> isActive >> isCompleted >> rewardClaimed >> currentProgress;
+            if (file.fail()) break;
+            // Tìm quest trong danh sách active dailyQuests và cập nhật
+            for (auto& q : dailyQuests) {
+                if (q.id == id) {
+                    q.isActive = isActive; q.isCompleted = isCompleted; q.rewardClaimed = rewardClaimed; q.currentProgress = currentProgress;
+                    break;
+                }
+            }
+        }
+
         file >> count;
-        for (int i = 0; i < count; ++i) { int id; file >> id; for (auto& q : mainQuests) if (q.id == id) file >> q.isActive >> q.isCompleted >> q.rewardClaimed >> q.currentProgress; }
+        // Đọc các nhiệm vụ chính đã lưu
+        for (int i = 0; i < count; ++i) {
+            int id;
+            bool isActive, isCompleted, rewardClaimed;
+            int currentProgress;
+            file >> id >> isActive >> isCompleted >> rewardClaimed >> currentProgress;
+            if (file.fail()) break;
+            // Tìm quest trong danh sách active mainQuests và cập nhật
+            for (auto& q : mainQuests) {
+                if (q.id == id) {
+                    q.isActive = isActive; q.isCompleted = isCompleted; q.rewardClaimed = rewardClaimed; q.currentProgress = currentProgress;
+                    break;
+                }
+            }
+        }
         file.close();
     }
 
@@ -174,17 +244,69 @@ public:
         return count;
     }
 
-    void resetMainQuests() {
-        mainQuests = {
-            Quest(100, "First Steps", "Complete Level 1", Quest::COMPLETE_LEVEL, 1, 75, 50, false), // Thêm 'false'
-            Quest(101, "Getting Stronger", "Collect 200 coins total", Quest::COLLECT_COINS, 200, 150, 75, true) // THÊM 'true'
-        };
+    std::vector<Quest*> getDisplayMainQuests() {
+        std::vector<Quest*> displayList;
+
+        // Ưu tiên 1: Thêm các nhiệm vụ đã hoàn thành nhưng CHƯA nhận thưởng
         for (auto& quest : mainQuests) {
-             quest.isCompleted = false;
-             quest.rewardClaimed = false;
-             quest.currentProgress = 0;
+            if (quest.isCompleted && !quest.rewardClaimed) {
+                displayList.push_back(&quest);
+                if (displayList.size() >= 3) return displayList;
+            }
         }
-        std::cout << "Main Quests have been reset." << std::endl;
+
+        // Ưu tiên 2: Thêm các nhiệm vụ đang tiến hành (chưa hoàn thành)
+        for (auto& quest : mainQuests) {
+            if (!quest.isCompleted) {
+                bool already_added = false;
+                for(Quest* q_ptr : displayList) {
+                    if (q_ptr->id == quest.id) {
+                        already_added = true;
+                        break;
+                    }
+                }
+
+                if (!already_added) {
+                     displayList.push_back(&quest);
+                    if (displayList.size() >= 3) return displayList;
+                }
+            }
+        }
+
+        return displayList;
+    }
+
+    // [CHUẨN] Hàm này reset TOÀN BỘ danh sách
+    void resetMainQuests(bool isInitialLoad = false) {
+        if (mainQuestPool.empty()) return; // Không có gì để reset
+
+        // 1. Lưu tiến độ của các nhiệm vụ hàng ngày cũ trước khi xóa
+        if (!isInitialLoad) {
+            saveProgress();
+        }
+
+        mainQuests.clear();
+
+        // 2. Thiết lập bộ sinh số ngẫu nhiên
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::mt19937 g(seed);
+
+        // 3. Tạo một danh sách các chỉ số (index) và xáo trộn chúng
+        std::vector<int> indices(mainQuestPool.size());
+        for (size_t i = 0; i < indices.size(); ++i) indices[i] = i;
+        std::shuffle(indices.begin(), indices.end(), g);
+
+        // 4. Chọn 3 nhiệm vụ đầu tiên từ danh sách đã xáo trộn
+        int numToSelect = std::min(3, (int)mainQuestPool.size()); // Chọn 3 hoặc ít hơn nếu pool nhỏ
+        for (int i = 0; i < numToSelect; ++i) {
+            mainQuests.push_back(mainQuestPool[indices[i]]); // Thêm BẢN SAO vào danh sách active
+        }
+
+        // 5. Lưu lại danh sách nhiệm vụ mới (rỗng)
+        if (!isInitialLoad) {
+            saveProgress();
+            std::cout << "Main Quests have been reset with new random quests." << std::endl;
+        }
     }
 };
 

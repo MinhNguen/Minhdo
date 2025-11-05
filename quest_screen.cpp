@@ -76,12 +76,23 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
                          my >= mainResetBtn.y && my <= mainResetBtn.y + mainResetBtn.h);
     uiRenderer.renderEnhancedButton(mainResetBtn, hovMainReset, "RESET MAIN QUESTS", fontTiny, {180, 50, 50, 255});
 
+    // [SỬA] Lấy danh sách nhiệm vụ động
+    std::vector<Quest*> questsToShow;
+    if (currentTab == DAILY) {
+        // Daily quest dùng như cũ, nhưng chuyển sang con trỏ cho đồng bộ
+        for (auto& q : questSystem.dailyQuests) {
+            questsToShow.push_back(&q);
+        }
+    } else {
+        // Main quest gọi hàm mới
+        questsToShow = questSystem.getDisplayMainQuests();
+    }
+
     // Render quests with enhanced panels
-    std::vector<Quest>& quests = (currentTab == DAILY) ? questSystem.dailyQuests : questSystem.mainQuests;
     int startY = 195, questHeight = 100, spacing = 10;
 
-    for (size_t i = 0; i < quests.size(); i++) {
-        Quest& quest = quests[i];
+    for (size_t i = 0; i < questsToShow.size(); i++) {
+        Quest& quest = *questsToShow[i]; // [SỬA] Giải tham chiếu con trỏ
         int y = startY + i * (questHeight + spacing);
         SDL_FRect questRect = {50, (float)y, 700, (float)questHeight};
 
@@ -127,7 +138,6 @@ void QuestScreen::render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fo
                                 " coins, " + std::to_string(quest.xpReward) + " XP";
         uiRenderer.renderTextLeft(rewardText, questRect.x + 15, questRect.y + 82, fontTiny, orange);
 
-        // Status button with enhanced style
         // Status button with enhanced style
         SDL_FRect statusBtn = {questRect.x + questRect.w - 125, questRect.y + 12, 110, 35};
         bool hovStatus = (mx >= statusBtn.x && mx <= statusBtn.x + statusBtn.w &&
@@ -193,18 +203,26 @@ bool QuestScreen::handleInput(SDL_Event& e, QuestSystem& questSystem, Player& pl
         return false; // Không thoát màn hình
     }
 
+    // [SỬA] Lấy danh sách nhiệm vụ động (giống hệt hàm render)
+    std::vector<Quest*> questsToShow;
+    if (currentTab == DAILY) {
+        for (auto& q : questSystem.dailyQuests) {
+            questsToShow.push_back(&q);
+        }
+    } else {
+        questsToShow = questSystem.getDisplayMainQuests();
+    }
+
     // Quest interaction
-    std::vector<Quest>& quests = (currentTab == DAILY) ? questSystem.dailyQuests : questSystem.mainQuests;
     int startY = 195, questHeight = 100, spacing = 10;
 
-    for (size_t i = 0; i < quests.size(); i++) {
-        Quest& quest = quests[i];
+    for (size_t i = 0; i < questsToShow.size(); i++) {
+        Quest& quest = *questsToShow[i]; // [SỬA] Giải tham chiếu con trỏ
         int y = startY + i * (questHeight + spacing);
 
-        // [SỬA] Tọa độ X phải khớp với hàm render()
         // Tọa độ render là: questRect.x (50) + questRect.w (700) - 125 = 625
         // Tọa độ Y render là: questRect.y (y) + 12
-        SDL_Rect statusBtn = { 625, y + 12, 110, 35 }; // Tọa độ cũ: {700, y + 10, 110, 35}
+        SDL_Rect statusBtn = { 625, y + 12, 110, 35 };
 
         if (mx >= statusBtn.x && mx <= statusBtn.x + statusBtn.w && my >= statusBtn.y && my <= statusBtn.y + statusBtn.h) {
             if (quest.isCompleted && !quest.rewardClaimed) {

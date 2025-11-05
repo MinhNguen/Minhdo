@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "combo_achievement.h"
+#include "quest_system.h"
 #include "player.h"
 #include <cmath>
 #include <vector>
@@ -22,8 +23,7 @@ struct AchievementParticle {
 
 class AchievementScreen {
 public:
-    enum Tab { ALL, LOCKED, UNLOCKED, RARE };
-    Tab currentTab;
+    AchievementTab currentTab;
     std::vector<AchievementParticle> particles;
 
     AchievementScreen(); // Khai báo Constructor
@@ -31,14 +31,17 @@ public:
     // Khai báo các phương thức
     void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontMedium, TTF_Font* fontSmall,
                 int screenW, int screenH, AchievementSystem& achievementSystem, Player& player);
-    bool handleInput(SDL_Event& e, int screenW, int screenH, AchievementSystem& achievementSystem, Player& player);
+
+    // [SỬA] Thêm QuestSystem& vào hàm handleInput
+    bool handleInput(SDL_Event& e, int screenW, int screenH, AchievementSystem& achievementSystem, QuestSystem& questSystem, Player& player);
+
     void updateParticles();
     void triggerParticleBurst(float x, float y, int count);
 
 private:
-    // Khai báo các hàm helper
+    // [SỬA] Cập nhật tham số của hàm helper
     void renderAchievementList(SDL_Renderer* renderer, TTF_Font* fontMedium, TTF_Font* fontSmall,
-                               int startY, int screenW, const std::vector<Achievement>& achievements,
+                               int startY, int screenW, const std::vector<Achievement*>& achievements,
                                AchievementSystem& achievementSystem, Player& player);
     void renderText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, SDL_Color color, int x, int y);
     void renderCenteredText(SDL_Renderer* renderer, TTF_Font* font, const std::string& text, SDL_Color color, int y, int screenW);

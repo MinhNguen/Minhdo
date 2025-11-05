@@ -58,7 +58,13 @@ public:
     int getMaxCombo() const { return maxCombo; }
 };
 
-// ===================== Achievement System =====================
+enum class AchievementTab {
+    ALL,
+    LOCKED,
+    UNLOCKED,
+    RARE
+};
+
 struct Achievement {
     int id;
     std::string name, description;
@@ -92,14 +98,85 @@ public:
     }
 
     void initializeAchievements() {
+        // [SỬA] Mở rộng đáng kể danh sách thành tích
         achievements = {
+            // Loại: Điểm số (SCORE)
             {0, "First Steps", "Score 50 points", 20, Achievement::SCORE, 50},
             {1, "Century", "Score 100 points", 50, Achievement::SCORE, 100},
             {2, "High Scorer", "Score 200 points", 100, Achievement::SCORE, 200},
+            {3, "Pro Gamer", "Score 500 points", 250, Achievement::SCORE, 500},
+            {100, "Legendary", "Score 1000 points", 500, Achievement::SCORE, 1000}, // Rare (reward >= 500)
+
+            // Loại: Tiền (COINS) - Giả định đây là TỔNG tiền tích lũy
             {4, "Coin Collector", "Collect 50 coins", 30, Achievement::COINS, 50},
+            {5, "Getting Rich", "Collect 200 coins", 75, Achievement::COINS, 200},
+            {6, "Wealthy", "Collect 500 coins", 150, Achievement::COINS, 500},
+            {101, "Millionaire", "Collect 1000 coins", 500, Achievement::COINS, 1000}, // Rare
+
+            // Loại: Combo (COMBO)
             {7, "Combo Starter", "Reach 10x combo", 50, Achievement::COMBO, 10},
+            {8, "Combo Master", "Reach 20x combo", 150, Achievement::COMBO, 20},
+            {102, "Untouchable", "Reach 30x combo", 500, Achievement::COMBO, 30}, // Rare
+
+            // Loại: Hoàn thành màn chơi (LEVEL) - Giả định đây là TỔNG số màn chơi đã qua
             {10, "Explorer", "Complete Level 2", 75, Achievement::LEVEL, 2},
+            {11, "Adventurer", "Complete Level 3", 100, Achievement::LEVEL, 3},
+            {12, "Conqueror", "Complete Level 5", 250, Achievement::LEVEL, 5},
+            {103, "World Wanderer", "Complete Level 10", 600, Achievement::LEVEL, 10} // Rare
         };
+    }
+
+    // [THÊM] HÀM MỚI: Lấy 3 thành tích để hiển thị
+    std::vector<Achievement*> getDisplayAchievements(AchievementTab currentTab) {
+        std::vector<Achievement*> displayList;
+
+        // Helper lambda 1: Kiểm tra xem có hiếm (rare) không
+        auto isRare = [](const Achievement& ach) {
+            return ach.reward >= 500; // Định nghĩa "Rare" là thưởng >= 500
+        };
+
+        // Helper lambda 2: Kiểm tra xem có khớp với tab đang chọn không
+        auto matchesTab = [&](const Achievement& ach) {
+            switch(currentTab) {
+                case AchievementTab::ALL:      return true;
+                case AchievementTab::LOCKED:   return !ach.unlocked;
+                case AchievementTab::UNLOCKED: return ach.unlocked && !isRare(ach);
+                case AchievementTab::RARE:     return ach.unlocked && isRare(ach);
+            }
+            return false;
+        };
+
+        // Helper lambda 3: Kiểm tra xem đã có trong danh sách hiển thị chưa
+        auto isAdded = [&](int achId) {
+            for(auto* p : displayList) if(p->id == achId) return true;
+            return false;
+        };
+
+        // Ưu tiên 1: Đã mở khóa, CHƯA nhận (Claimable)
+        for (auto& ach : achievements) {
+            if (ach.unlocked && !ach.rewardClaimed && matchesTab(ach)) {
+                displayList.push_back(&ach);
+                if (displayList.size() >= 3) return displayList;
+            }
+        }
+
+        // Ưu tiên 2: CHƯA mở khóa (In-Progress)
+        for (auto& ach : achievements) {
+            if (!ach.unlocked && matchesTab(ach) && !isAdded(ach.id)) {
+                displayList.push_back(&ach);
+                if (displayList.size() >= 3) return displayList;
+            }
+        }
+
+        // Ưu tiên 3: Đã mở khóa, ĐÃ nhận (Claimed)
+        for (auto& ach : achievements) {
+            if (ach.unlocked && ach.rewardClaimed && matchesTab(ach) && !isAdded(ach.id)) {
+                displayList.push_back(&ach);
+                if (displayList.size() >= 3) return displayList;
+            }
+        }
+
+        return displayList; // Trả về (có thể ít hơn 3)
     }
 
     void claimReward(int achievementId, Player& player) {
