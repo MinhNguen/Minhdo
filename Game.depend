@@ -563,7 +563,7 @@
 	"player.h"
 	"combo_achievement.h"
 
-1762011859 d:\snakegame\game\map_theme.h
+1762402305 d:\snakegame\game\map_theme.h
 	<SDL2/SDL.h>
 	<string>
 	<vector>
@@ -595,7 +595,7 @@
 	"map_theme.h"
 	"ui_renderer.h"
 
-1762080712 source:d:\snakegame\game\obstacle.cpp
+1762361578 source:d:\snakegame\game\obstacle.cpp
 	"obstacle.h"
 	<iostream>
 
@@ -615,4 +615,8 @@
 	"SDL_version.h"
 	"begin_code.h"
 	"close_code.h"
+
+1762361578 source:d:\snakegame\game\powerup.cpp
+	"powerup.h"
+	<iostream>
 
