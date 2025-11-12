@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream> // Cần thiết cho việc định dạng text
 #include "player.h"
-#include "combo_achievement.h"
+#include "achievementSystem.h"
 AchievementParticle::AchievementParticle(float px, float py) {
     x = px; y = py;
     vx = -2.0f + (rand() % 40) / 10.0f;

@@ -447,7 +447,7 @@
 
 1762954149 d:\snakegame\game\player.h
 
-1762080707 d:\snakegame\game\obstacle.h
+1762960166 d:\snakegame\game\obstacle.h
 	<SDL2/SDL.h>
 	<vector>
 	<cstdlib>
@@ -486,7 +486,7 @@
 	"player.h"
 	"score.h"
 
-1762958394 d:\snakegame\game\combo_achievement.h
+1762958964 d:\snakegame\game\combo_achievement.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -524,10 +524,10 @@
 	"player.h"
 	"ui_renderer.h"
 
-1762352579 d:\snakegame\game\achievement_screen.h
+1762959165 d:\snakegame\game\achievement_screen.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
-	"combo_achievement.h"
+	"achievementSystem.h"
 	"quest_system.h"
 	"player.h"
 	<cmath>
@@ -545,7 +545,7 @@
 	<fstream>
 	<string>
 
-1762157192 d:\snakegame\game\leaderboard.h
+1762958947 d:\snakegame\game\leaderboard.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<string>
@@ -556,25 +556,26 @@
 	"player.h"
 	"ui_renderer.h"
 
-1762360017 source:d:\snakegame\game\achievement_screen.cpp
+1762959178 source:d:\snakegame\game\achievement_screen.cpp
 	"achievement_screen.h"
 	<iostream>
 	<sstream>
 	"player.h"
-	"combo_achievement.h"
+	"achievementSystem.h"
 
-1762402305 d:\snakegame\game\map_theme.h
+1762959729 d:\snakegame\game\map_theme.h
 	<SDL2/SDL.h>
 	<string>
 	<vector>
 	<cmath>
+	"DayNightCycle.h"
 
-1762955643 source:d:\snakegame\game\game.cpp
+1762958394 source:d:\snakegame\game\game.cpp
 	"game.h"
 	<iostream>
 	<fstream>
 
-1762958417 d:\snakegame\game\game.h
+1762960255 d:\snakegame\game\game.h
 	<SDL2/SDL.h>
 	<SDL2/SDL_ttf.h>
 	<SDL2/SDL_mixer.h>
@@ -585,7 +586,7 @@
 	"obstacle.h"
 	"score.h"
 	"powerup.h"
-	"combo_achievement.h"
+	"achievementSystem.h"
 	"quest_system.h"
 	"shop.h"
 	"quest_screen.h"
@@ -596,8 +597,10 @@
 	"ui_renderer.h"
 	"levelManager.h"
 	"comboSystem.h"
+	"DifficultyManager.h"
+	"ObstacleManager.h"
 
-1762955856 source:d:\snakegame\game\obstacle.cpp
+1762960238 source:d:\snakegame\game\obstacle.cpp
 	"obstacle.h"
 	<iostream>
 
@@ -638,4 +641,27 @@
 	"levelManager.h"
 
 1762958394 d:\snakegame\game\combosystem.h
+
+1762958947 d:\snakegame\game\difficultymanager.h
+
+1762958964 d:\snakegame\game\achievementsystem.h
+	<SDL2/SDL.h>
+	<SDL2/SDL_ttf.h>
+	<string>
+	<vector>
+	<fstream>
+	"player.h"
+
+1762959701 d:\snakegame\game\daynightcycle.h
+	<SDL2/SDL.h>
+	<string>
+	<vector>
+	<cmath>
+
+1762960166 d:\snakegame\game\obstaclemanager.h
+	"obstacle.h"
+	<vector>
+
+1762960223 source:d:\snakegame\game\obstaclemanager.cpp
+	"ObstacleManager.h"
 

@@ -7,7 +7,6 @@
 #include <ctime>
 #include <algorithm>
 #include <cmath>
-
 // Loại chướng ngại vật
 enum ObstacleType {
     CACTUS_SMALL,      // Xương rồng nhỏ
@@ -54,31 +53,5 @@ private:
     void fillCircle(SDL_Renderer* renderer, int cx, int cy, int radius);
 };
 
-class ObstacleManager {
-public:
-    std::vector<Obstacle> obstacles;
-    int spawnTimer;
-    int spawnInterval;
-    int meteorTimer;
-    int meteorInterval;
-    int groundY;
-    int speed;
-    int screenWidth;
-
-    // Constructor
-    ObstacleManager(int ground, int gameSpeed, int width);
-
-    // Public methods
-    void update();
-    void render(SDL_Renderer* renderer);
-    bool checkCollisionWithPlayer(int px, int py, int pwidth, int pheight);
-    void clear();
-    void setSpeed(int newSpeed);
-
-private:
-    // Private helper methods
-    void spawnObstacle();
-    void spawnMeteor();
-};
 
 #endif // OBSTACLE_H_INCLUDED

@@ -79,7 +79,6 @@ public:
     void render(SDL_Renderer* renderer, TTF_Font* fontBig, TTF_Font* fontSmall,
                 TTF_Font* fontTiny, UIRenderer& uiRenderer) {
         SDL_Color white = {255, 255, 255, 255};
-        SDL_Color gold = {255, 215, 0, 255};
         SDL_Color silver = {192, 192, 192, 255};
         SDL_Color bronze = {205, 127, 50, 255};
 

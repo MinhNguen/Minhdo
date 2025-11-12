@@ -12,7 +12,7 @@
 #include "obstacle.h"
 #include "score.h"
 #include "powerup.h"
-#include "combo_achievement.h"
+#include "achievementSystem.h"
 #include "quest_system.h"
 #include "shop.h"
 #include "quest_screen.h"
@@ -23,7 +23,8 @@
 #include "ui_renderer.h"
 #include "levelManager.h"
 #include "comboSystem.h"
-
+#include "DifficultyManager.h"
+#include "ObstacleManager.h"
 enum class GameState {
     MENU,
     LEVEL_SELECT,
