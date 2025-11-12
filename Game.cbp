@@ -17,6 +17,7 @@
 					<Add directory="../../SDL2_ttf-2.24.0/x86_64-w64-mingw32/include" />
 					<Add directory="../../SDL2_image-2.8.8/x86_64-w64-mingw32/include" />
 					<Add directory="../../SDL2-devel-2.32.10-mingw/SDL2-2.32.10/x86_64-w64-mingw32/include/SDL2" />
+					<Add directory="../../SDL2_mixer-2.8.1/x86_64-w64-mingw32/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-lmingw32" />
@@ -24,13 +25,16 @@
 					<Add option="-lSDL2" />
 					<Add option="-lSDL2_ttf" />
 					<Add option="-lSDL2_image" />
+					<Add option="-lSDL2_mixer" />
 					<Add library="../../SDL2-devel-2.32.10-mingw/SDL2-2.32.10/x86_64-w64-mingw32/lib/libSDL2main.a" />
 					<Add library="../../SDL2-devel-2.32.10-mingw/SDL2-2.32.10/x86_64-w64-mingw32/lib/libSDL2.a" />
 					<Add library="../../SDL2_ttf-2.24.0/x86_64-w64-mingw32/lib/libSDL2_ttf.a" />
 					<Add library="../../SDL2_image-2.8.8/x86_64-w64-mingw32/lib/libSDL2_image.a" />
+					<Add library="../../SDL2_mixer-2.8.1/x86_64-w64-mingw32/lib/libSDL2_mixer.a" />
 					<Add directory="../../SDL2-devel-2.32.10-mingw/SDL2-2.32.10/x86_64-w64-mingw32/lib" />
 					<Add directory="../../SDL2_ttf-2.24.0/x86_64-w64-mingw32/lib" />
 					<Add directory="../../SDL2_image-2.8.8/x86_64-w64-mingw32/lib" />
+					<Add directory="../../SDL2_mixer-2.8.1/x86_64-w64-mingw32/lib" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -58,10 +62,12 @@
 		<Unit filename="game.h" />
 		<Unit filename="leaderboard.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="map_theme.cpp" />
 		<Unit filename="map_theme.h" />
 		<Unit filename="obstacle.cpp" />
 		<Unit filename="obstacle.h" />
 		<Unit filename="player.h" />
+		<Unit filename="powerup.cpp" />
 		<Unit filename="powerup.h" />
 		<Unit filename="quest_screen.cpp" />
 		<Unit filename="quest_screen.h" />

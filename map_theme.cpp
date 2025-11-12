@@ -133,8 +133,6 @@ void EnvironmentParticle::render(SDL_Renderer* renderer) {
 
 bool EnvironmentParticle::isDead() const { return lifetime <= 0; }
 
-// ===================== MAPTHEME IMPLEMENTATION =====================
-
 MapTheme::MapTheme(MapThemeType themeType) : type(themeType), particleSpawnTimer(0) {
     setupTheme();
 }

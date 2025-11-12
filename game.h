@@ -21,6 +21,8 @@
 #include "leaderboard.h"
 #include "map_theme.h"
 #include "ui_renderer.h"
+#include "levelManager.h"
+#include "comboSystem.h"
 
 enum class GameState {
     MENU,
@@ -32,34 +34,6 @@ enum class GameState {
     QUEST,
     ACHIEVEMENT,
     LEADERBOARD
-};
-
-struct LevelInfo {
-    int levelNumber;
-    std::string name;
-    int obstacleSpeed;
-    int spawnInterval;
-    int meteorInterval;
-    int targetScore;
-    bool unlocked;
-    int bestScore;
-    MapThemeType themeType;
-};
-
-class LevelManager {
-public:
-    std::vector<LevelInfo> levels;
-    int currentLevel;
-
-    LevelManager();
-    void initializeLevels();
-    void saveProgress();
-    void loadProgress();
-    void unlockNextLevel();
-    void updateBestScore(int score);
-    bool isLevelComplete(int score);
-    LevelInfo& getCurrentLevelInfo();
-    void setCurrentLevel(int index);
 };
 
 class Game {

@@ -23,7 +23,7 @@ struct Player {
     int bestComboAchieved;
 
 
-    Player() : x(50), y(380), width(40), height(60),
+    Player() : x(50), y(380), width(100), height(100),
                vx(5), vy(0), gravity(0.6f),
                isOnGround(true), groundY(380),
                level(1), xp(0), xpToNextLevel(100),
